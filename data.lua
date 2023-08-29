@@ -3,9 +3,9 @@
 require("code.ui-icons")
 require("code.input")
 
-local e = require("code.entities")
+local f = require("code.functions")
 
-e.create_junction_entities("pipe")
+f.create_junction_entities("pipe")
 
 -- THIS WORKS!!
 
