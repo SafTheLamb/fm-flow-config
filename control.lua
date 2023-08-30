@@ -1,6 +1,22 @@
 ---------------------------------------------------------------------------------------------------
 
+local math2d = require("math2d")
+
+local f = require("code.functions")
 local g = require("code.globals")
+
+-- math utils -------------------------------------------------------------------------------------
+
+function math2d.position.equal(p1, p2)
+	p1 = math2d.position.ensure_xy(p1)
+	p2 = math2d.position.ensure_xy(p2)
+	return p1.x == p2.x and p1.y == p2.y
+end
+
+function math2d.position.tilepos(pos)
+	pos = math2d.position.ensure_xy(pos)
+	return {x=math.floor(pos.x), y=math.floor(pos.y)}
+end
 
 -- pipe utils -------------------------------------------------------------------------------------
 
@@ -17,95 +33,132 @@ function pipe_utils.is_pipe(entity)
     return entity and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
 end
 
-function pipe_utils.dir_equals(a, b)
-    return a.x == b.x and a.y == b.y
-end
-
 function pipe_utils.check_flow_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
     local dirpos = g.directions[direction].position
-    for connection in pipe.fluidbox.get_pipe_connections(1) do
-        if pipe_utils.dir_equals(connection.position, dirpos) then
-            states[direction] = "flow"
-            table.insert(states.directions, direction)
+    --local targetpos = math2d.position.tilepos(math2d.position.add(pipe.position, dirpos))
+    if #pipe.fluidbox.get_pipe_connections(1) > 0 then
+        for _,connection in pairs(pipe.fluidbox.get_pipe_connections(1)) do
+            if connection.target ~= nil then
+
+                -- if math
+                --     states[direction] = "flow"
+                -- end
+            end
         end
     end
+
+    -- if #pipe.fluidbox == 1 then
+    --     local fluidbox = pipe.fluidbox
+    --     if fluidbox ~= nil then
+    --         states[direction] = "flow"
+    --         local prototype = fluidbox.get_prototype(1)
+    --         if prototype ~= nil then
+    --             states[direction] = "open"
+    --         end
+    --     end
+    -- end
+    -- for i=1,#pipe.fluidbox do
+    --     local fluidbox = pipe.fluidbox[i]
+    --     if fluidbox == nil then break end
+    --     for connection in fluidbox.get_pipe_connections() do
+    --         if pipe_utils.dir_equals(connection.position, dirpos) then
+    --             states[direction] = "flow"
+    --             states.directions[direction] = true
+    --         end
+    --     end
+    -- end
 end
 
 function pipe_utils.check_open_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
-    local dirpos = g.directions[direction].position
-    local fluidbox = pipe.fluidbox.get_prototype(1)
-    if fluidbox ~= nil then
-        for connection in fluidbox.pipe_connections do
-            for position in connection.positions do
-                if pipe_utils.dir_equals(position, dirpos) then
-                    states[direction] = "open"
-                    table.insert(states.directions, direction)
-                end
-            end
+    local pipeinfo = f.get_pipe_info(pipe.name)
+    if pipeinfo.junction ~= nil then
+        local junction = g.junctions[pipeinfo.junction]
+        if junction.directions[direction] ~= nil then
+            states[direction] = "open"
+            states.directions[direction] = true
         end
+    else
+        states[direction] = "open"
+        states.directions[direction] = true
     end
+    -- local dirpos = g.directions[direction].position
+    -- for _,connection in pairs(pipe.fluidbox.get_prototype(1).pipe_connections) do
+    --     for _,position in pairs(connection.positions) do
+    --         if math2d.position.equal(position, dirpos) then
+    --             states[direction] = "open"
+    --             states.directions[direction] = true
+    --             return
+    --         end
+    --     end
+    -- end
 end
 
 function pipe_utils.check_block_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
-    local dirpos = g.directions[direction].position
-    local searchpos = { pipe.position.x + dirpos.x, pipe.position.y + dirpos.y }
-    local otherpipe = pipe.surface.find_entity("pipe", searchpos)
-    if otherpipe ~= nil then
-        if #pipe.get_fluid_contents() ~= #otherpipe.get_fluid_contents() then
-            states[direction] = "block"
-            return
-        end
-        -- check if the fluid types match between the two pipes (since even with 2+ fluids, technically that's the flow state)
-        for fluid_a,_ in pipe.get_fluid_contents() do
-            local found = false
-            for fluid_b,_ in otherpipe.get_fluid_contents() do
-                if fluid_a == fluid_b then
-                    found = true
-                    break
-                end
-            end
-            -- if we can't find one of the fluids, it's a mismatch and we shouldn't allow opening the flow
-            if found ~= true then
-                states[direction] = "block"
-                return
-            end
-        end
-    end
+    -- local dirpos = g.directions[direction].position
+    -- local searchpos = { pipe.position.x + dirpos.x, pipe.position.y + dirpos.y }
+    -- local otherpipe = pipe.surface.find_entity("pipe", searchpos)
+    -- if otherpipe ~= nil then
+    --     if #pipe.get_fluid_contents() ~= #otherpipe.get_fluid_contents() then
+    --         states[direction] = "block"
+    --         return
+    --     end
+    --     -- check if the fluid types match between the two pipes (since even with 2+ fluids, technically that's the flow state)
+    --     for fluid_a,_ in pairs(pipe.get_fluid_contents()) do
+    --         local found = false
+    --         for fluid_b,_ in pairs(otherpipe.get_fluid_contents()) do
+    --             if fluid_a == fluid_b then
+    --                 found = true
+    --                 break
+    --             end
+    --         end
+    --         -- if we can't find one of the fluids, it's a mismatch and we shouldn't allow opening the flow
+    --         if found ~= true then
+    --             states[direction] = "block"
+    --             return
+    --         end
+    --     end
+    -- end
 end
 
 function pipe_utils.check_close_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
-    local dirpos = g.directions[direction].position
-    local fluidbox = pipe.fluidbox.get_prototype(1)
-    if fluidbox ~= nil then
-        for connection in fluidbox.pipe_connections do
-            for position in connection.positions do
-                if pipe_utils.dir_equals(position, dirpos) then
-                    return
-                end
-            end
+    local pipeinfo = f.get_pipe_info(pipe.name)
+    if pipeinfo.junction ~= nil then
+        local junction = g.junctions[pipeinfo.junction]
+        if junction.directions[direction] == nil then
+            states[direction] = "close"
         end
     end
-    
-    states[direction] = "close"
+    -- local dirpos = g.directions[direction].position
+    -- for _,connection in pairs(pipe.fluidbox.get_prototype(1).pipe_connections) do
+    --     local found = false
+    --     for _,position in pairs(connection.positions) do
+    --         if math2d.position.equal(position, dirpos) then
+    --             found = true
+    --         end
+    --     end
+    --     if found ~= false then
+    --         states[direction] = "close"
+    --     end
+    -- end
 end
 
 function pipe_utils.get_direction_states(pipe)
-    local states = {}
-    for dir,_ in pair(g.directions) do
+    local states = {directions={}}
+    for dir,_ in pairs(g.directions) do
         -- check flow and open before block and close: they're more true-to-state, even if something weird exists in the pipes
         -- check flow before open: flow is a special case of open, purely cosmetic
-        pipe_utils.check_flow_state(pipe, states, dir)
+        -- pipe_utils.check_flow_state(pipe, states, dir)
         pipe_utils.check_open_state(pipe, states, dir)
         -- check block before close: don't allow opening a pipe with a mismatched fluid state
-        pipe_utils.check_block_state(pipe, states, dir)
+        --pipe_utils.check_block_state(pipe, states, dir)
         pipe_utils.check_close_state(pipe, states, dir)
     end
     return states
@@ -121,7 +174,7 @@ function pipe_utils.check_direction_limits(pipe, directions)
 end
 
 function pipe_utils.replace_pipe(player, pipe, directions)
-    local newname = f.construct_pipename(f.get_basename(pipe.name), directions)
+    local newname = f.construct_pipename(f.get_pipe_info(pipe.name).base, directions)
     local newpipe = player.surface.create_entity{name=newname, position=pipe.position, force=player.force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
     if newpipe ~= nil then
         player.update_selected_entity(newpipe.position)
@@ -216,19 +269,19 @@ end
 function gui.update_direction_button(states, button, direction)
     if states[direction] == "flow" then
         button.sprite="fc-flow-"..direction
-        button.enable=true
+        button.enabled=true
     elseif states[direction] == "open" then
         button.sprite="fc-open-"..direction
-        button.enable=true
+        button.enabled=true
     elseif states[direction] == "close" then
         button.sprite="fc-close-"..direction
-        button.enable=true
+        button.enabled=true
     elseif states[direction] == "block" then
         button.sprite="fc-block-"..direction
-        button.enable=false
+        button.enabled=false
     else
         button.sprite=nil
-        button.enable=false
+        button.enabled=false
     end
 end
 
@@ -240,8 +293,8 @@ function gui.update(player, pipe)
     gui.update_toggle_button(states, gui_instance.toggle_content.toggle_button)
     gui.update_direction_button(states, gui_instance.table_direction.children[2], "north")
     gui.update_direction_button(states, gui_instance.table_direction.children[4], "west")
-    gui.update_direction_button(states, gui_instance.table_direction.children[6], "south")
-    gui.update_direction_button(states, gui_instance.table_direction.children[8], "east")
+    gui.update_direction_button(states, gui_instance.table_direction.children[6], "east")
+    gui.update_direction_button(states, gui_instance.table_direction.children[8], "south")
 
     local icon = "item/pipe"
     if pipe.prototype.items_to_place_this then

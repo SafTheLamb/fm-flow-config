@@ -5,90 +5,90 @@ g.this_mod_name = "FlowConfig"
 g.icon_path = "__"..g.this_mod_name.."__/graphics/icons"
 
 g.directions = {
-    north = { position = {0, -1} },
-    east = { position =  {1,  0} },
-    south = { position = {0,  1} },
-    west = { position =  {-1, 0} },
+    north = { position = {x= 0, y=-1} },
+    east = { position =  {x= 1, y= 0} },
+    south = { position = {x= 0, y= 1} },
+    west = { position =  {x=-1, y= 0} },
 }
 
 g.junctions = {
     -- straight ---------------------------------
-    NS = {
-        directions = { "north", "south" },
+    ns = {
+        directions = { ["north"]=true, ["south"]=true },
         connections = {
-            { position = { 0, -1} },
-            { position = { 0,  1} },
+            { position = {x= 0, y=-1} },
+            { position = {x= 0, y= 1} },
         }
     },
-    EW = {
-        directions = { "east", "west" },
+    ew = {
+        directions = { ["east"]=true, ["west"]=true },
         connections = {
-            { position = { 1,  0} },
-            { position = {-1,  0} },
+            { position = {x= 1, y= 0} },
+            { position = {x=-1, y= 0} },
         }
     },
     
     -- elbow ------------------------------------
-    NE = {
-        directions = { "north", "east" },
+    ne = {
+        directions = { ["north"]=true, ["east"]=true },
         connections = {
-            { position = { 0, -1} },
-            { position = { 1,  0} },
+            { position = {x= 0, y=-1} },
+            { position = {x= 1, y= 0} },
         }
     },
-    ES = {
-        directions = { "east", "south" },
+    es = {
+        directions = { ["east"]=true, ["south"]=true },
         connections = {
-            { position = { 1,  0} },
-            { position = { 0,  1} },
+            { position = {x= 1, y= 0} },
+            { position = {x= 0, y= 1} },
         }
     },
-    SW = {
-        directions = { "south", "west" },
+    sw = {
+        directions = { ["south"]=true, ["west"]=true },
         connections = {
-            { position = { 0,  1} },
-            { position = {-1,  0} },
+            { position = {x= 0, y= 1} },
+            { position = {x=-1, y= 0} },
         }
     },
-    NW = {
-        directions = { "north", "west" },
+    nw = {
+        directions = { ["north"]=true, ["west"]=true },
         connections = {
-            { position = { 0, -1} },
-            { position = {-1,  0} },
+            { position = {x= 0, y=-1} },
+            { position = {x=-1, y= 0} },
         }
     },
 
     -- T-junction -------------------------------
-    NES = {
-        directions = { "north", "east", "south" },
+    nes = {
+        directions = { ["north"]=true, ["east"]=true, ["south"]=true },
         connections = {
-            { position = { 0, -1} },
-            { position = { 1,  0} },
-            { position = { 0,  1} },
+            { position = {x= 0, y=-1} },
+            { position = {x= 1, y= 0} },
+            { position = {x= 0, y= 1} },
         }
     },
-    ESW = {
-        directions = { "east", "south", "west" },
+    esw = {
+        directions = { ["east"]=true, ["south"]=true, ["west"]=true },
         connections = {
-            { position = { 1,  0} },
-            { position = { 0,  1} },
-            { position = {-1,  0} },
+            { position = {x= 1, y= 0} },
+            { position = {x= 0, y= 1} },
+            { position = {x=-1, y= 0} },
         }
     },
-    NSW = {
-        directions = { "north", "south", "west" },
+    nsw = {
+        directions = { ["north"]=true, ["south"]=true, ["west"]=true },
         connections = {
-            { position = { 0, -1} },
-            { position = { 0,  1} },
-            { position = {-1,  0} },
+            { position = {x= 0, y=-1} },
+            { position = {x= 0, y= 1} },
+            { position = {x=-1, y= 0} },
         }
     },
-    NEW = {
-        directions = { "north", "east", "west" },
+    new = {
+        directions = { ["north"]=true, ["east"]=true, ["west"]=true },
         connections = {
-            { position = { 0, -1} },
-            { position = { 1,  0} },
-            { position = {-1,  0} },
+            { position = {x= 0, y=-1} },
+            { position = {x= 1, y= 0} },
+            { position = {x=-1, y= 0} },
         }
     },
 }

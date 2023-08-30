@@ -18,24 +18,25 @@ end
 local pipe_map = {}
 for _,basename in pairs(g.base_pipe_names) do
     for juncname,_ in pairs(g.junctions) do
-        pipe_map[basename.."-"..juncname] = basename
+        pipe_map[basename.."-"..juncname] = {base=basename, junction=juncname}
     end
+    pipe_map[basename] = {base=basename, junction=nil}
 end
 
-function f.get_basename(pipename)
+function f.get_pipe_info(pipename)
     if pipe_map[pipename] ~= nil then
         return pipe_map[pipename]
     end
-    return "pipe"
+    return {base="pipe"}
 end
 
 function f.construct_pipename(basename, directions)
     if #directions == 4 then return basename end
     local suffix = "-"
-    if (directions[north] ~= nil) then suffix = suffix.."N" end
-    if (directions[east] ~= nil) then suffix = suffix.."E" end
-    if (directions[south] ~= nil) then suffix = suffix.."S" end
-    if (directions[west] ~= nil) then suffix = suffix.."W" end
+    if (directions["north"] ~= nil) then suffix = suffix.."n" end
+    if (directions["east"] ~= nil) then suffix = suffix.."e" end
+    if (directions["south"] ~= nil) then suffix = suffix.."s" end
+    if (directions["west"] ~= nil) then suffix = suffix.."w" end
     return basename..suffix
 end
 
