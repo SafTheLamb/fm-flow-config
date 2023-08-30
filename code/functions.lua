@@ -18,12 +18,15 @@ end
 local pipe_map = {}
 for _,basename in pairs(g.base_pipe_names) do
     for juncname,_ in pairs(g.junctions) do
-        table.insert(pipe_map, { basename.."-"..juncname = basename })
+        pipe_map[basename.."-"..juncname] = basename
     end
 end
 
 function f.get_basename(pipename)
-    return pipe_map[pipename]
+    if pipe_map[pipename] ~= nil then
+        return pipe_map[pipename]
+    end
+    return "pipe"
 end
 
 function f.construct_pipename(basename, directions)

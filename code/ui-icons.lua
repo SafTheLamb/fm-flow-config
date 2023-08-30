@@ -3,14 +3,14 @@
 local g = require("code.globals")
 
 local function get_icon_path(name)
-    return g.icon_path.."/40/"..name
+    return g.icon_path.."/40/"..name..".png"
 end
 
 for direction,_ in pairs(g.directions) do
     data:extend({
         {
             type = "sprite",
-            name = "icon/fc-flow-"..direction,
+            name = "fc-flow-"..direction,
             filename = get_icon_path("flow-"..direction),
             width = 40,
             height = 40,
@@ -19,7 +19,7 @@ for direction,_ in pairs(g.directions) do
         },
         {
             type = "sprite",
-            name = "icon/fc-open-"..direction,
+            name = "fc-open-"..direction,
             filename = get_icon_path("open-"..direction),
             width = 40,
             height = 40,
@@ -28,7 +28,7 @@ for direction,_ in pairs(g.directions) do
         },
         {
             type = "sprite",
-            name = "icon/fc-close-"..direction,
+            name = "fc-close-"..direction,
             filename = get_icon_path("close-"..direction),
             width = 40,
             height = 40,
@@ -37,7 +37,7 @@ for direction,_ in pairs(g.directions) do
         },
         {
             type = "sprite",
-            name = "icon/fc-block-"..direction,
+            name = "fc-block-"..direction,
             filename = get_icon_path("block-"..direction),
             width = 40,
             height = 40,
@@ -50,7 +50,7 @@ end
 data:extend({
     {
         type = "sprite",
-        name = "icon/fc-toggle-open",
+        name = "fc-toggle-open",
         filename = get_icon_path("toggle-open"),
         width = 40,
         height = 40,
@@ -59,7 +59,7 @@ data:extend({
     },
     {
         type = "sprite",
-        name = "icon/fc-toggle-close",
+        name = "fc-toggle-close",
         filename = get_icon_path("toggle-close"),
         width = 40,
         height = 40,
@@ -68,7 +68,7 @@ data:extend({
     },
     {
         type = "sprite",
-        name = "icon/fc-toggle-locked",
+        name = "fc-toggle-locked",
         filename = get_icon_path("toggle-locked"),
         width = 40,
         height = 40,

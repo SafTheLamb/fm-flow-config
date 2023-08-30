@@ -36,72 +36,123 @@ end
 function pipe_utils.check_open_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
+    local dirpos = g.directions[direction].position
+    local fluidbox = pipe.fluidbox.get_prototype(1)
+    if fluidbox ~= nil then
+        for connection in fluidbox.pipe_connections do
+            for position in connection.positions do
+                if pipe_utils.dir_equals(position, dirpos) then
+                    states[direction] = "open"
+                    table.insert(states.directions, direction)
+                end
+            end
+        end
+    end
+end
 
-    states[direction] = "open"
-    table.insert(states.directions, direction)
-    -- Open
-    -- TODO
+function pipe_utils.check_block_state(pipe, states, direction)
+    if states[direction] ~= nil then return end
+
+    local dirpos = g.directions[direction].position
+    local searchpos = { pipe.position.x + dirpos.x, pipe.position.y + dirpos.y }
+    local otherpipe = pipe.surface.find_entity("pipe", searchpos)
+    if otherpipe ~= nil then
+        if #pipe.get_fluid_contents() ~= #otherpipe.get_fluid_contents() then
+            states[direction] = "block"
+            return
+        end
+        -- check if the fluid types match between the two pipes (since even with 2+ fluids, technically that's the flow state)
+        for fluid_a,_ in pipe.get_fluid_contents() do
+            local found = false
+            for fluid_b,_ in otherpipe.get_fluid_contents() do
+                if fluid_a == fluid_b then
+                    found = true
+                    break
+                end
+            end
+            -- if we can't find one of the fluids, it's a mismatch and we shouldn't allow opening the flow
+            if found ~= true then
+                states[direction] = "block"
+                return
+            end
+        end
+    end
 end
 
 function pipe_utils.check_close_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
+    local dirpos = g.directions[direction].position
+    local fluidbox = pipe.fluidbox.get_prototype(1)
+    if fluidbox ~= nil then
+        for connection in fluidbox.pipe_connections do
+            for position in connection.positions do
+                if pipe_utils.dir_equals(position, dirpos) then
+                    return
+                end
+            end
+        end
+    end
+    
     states[direction] = "close"
-    -- Close
-    -- TODO
-end
-
-function pipe_utils.check_block_state(pipe, states, direction)
-    if states[direction] ~= nil then return end
-    -- Block: find pipe entities in cardinal direction and check fluid type
-    -- TODO
-
-    states[direction] = "block"
 end
 
 function pipe_utils.get_direction_states(pipe)
     local states = {}
     for dir,_ in pair(g.directions) do
+        -- check flow and open before block and close: they're more true-to-state, even if something weird exists in the pipes
+        -- check flow before open: flow is a special case of open, purely cosmetic
         pipe_utils.check_flow_state(pipe, states, dir)
         pipe_utils.check_open_state(pipe, states, dir)
-        pipe_utils.check_close_state(pipe, states, dir)
+        -- check block before close: don't allow opening a pipe with a mismatched fluid state
         pipe_utils.check_block_state(pipe, states, dir)
+        pipe_utils.check_close_state(pipe, states, dir)
     end
     return states
 end
 
+function pipe_utils.check_direction_limits(pipe, directions)
+    if #directions < 2 then return false end
+    local states = pipe_utils.get_direction_states(pipe)
+    for _,direction in pairs(directions) do
+        if states[direction] == "block" then return false end
+    end
+    return true
+end
+
 function pipe_utils.replace_pipe(player, pipe, directions)
-    -- TODO: construct name
-    local name = f.construct_pipename(f.get_basename(pipe.name), directions)
-    local newpipe = player.surface.create_entity(name=name, position=pipe.position, force=player.force, fast_replace=true, spill=false, create_build_effect_smoke=false)
+    local newname = f.construct_pipename(f.get_basename(pipe.name), directions)
+    local newpipe = player.surface.create_entity{name=newname, position=pipe.position, force=player.force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
     if newpipe ~= nil then
         player.update_selected_entity(newpipe.position)
     end
+    return newpipe
 end
 
 function pipe_utils.open_direction(player, pipe, directions, direction)
     if directions[direction] == nil then
         directions[direction] = true
-        pipe_utils.replace_pipe(player, pipe, directions)
+        return pipe_utils.replace_pipe(player, pipe, directions)
     end
+    return nil
 end
 
 function pipe_utils.close_direction(player, pipe, directions, direction)
     if directions[direction] ~= nil then
         directions[direction] = nil
-        pipe_utils.replace_pipe(player, pipe, directions)
+        return pipe_utils.replace_pipe(player, pipe, directions)
     end
+    return nil
 end
 
 function pipe_utils.toggle_direction(player, pipe, direction)
     local states = pipe_utils.get_direction_states(pipe)
     if states[direction] == "flow" or states[direction] == "open" then
-        pipe_utils.close_direction(player, pipe, states.directions, direction)
-        return true
+        return pipe_utils.close_direction(player, pipe, states.directions, direction)
     elseif states[direction] == "close" then
-        pipe_utils.open_direction(player, pipe, states.directions, direction)
-        return true
+        return pipe_utils.open_direction(player, pipe, states.directions, direction)
     end
+    return nil
 end
 
 -- GUI --------------------------------------------------------------------------------------------
@@ -117,7 +168,7 @@ function gui.create(player)
 
     local toggle_content = flow_content.add({type="flow", name="toggle_content", direction="horizontal"})
     toggle_content.add({type="label", name="label_toggle", caption={"gui-flow-config.toggle"}, style="heading_2_label"})
-    local toggle_button = toggle_content.add({type="sprite-button", name="toggle_button", caption={"gui-flow-config.open"}, sprite="icon/fc-toggle-open")
+    local toggle_button = toggle_content.add({type="sprite-button", name="toggle_button", caption={"gui-flow-config.open"}, sprite="fc-toggle-open"})
 
     flow_content.add({type="line", name="line", style="control_behavior_window_line"})
 
@@ -153,7 +204,7 @@ end
 
 function gui.create_all()
     for idx, player in pairs(game.players) do
-        gui.delete(player)
+        gui.destroy(player)
         gui.create(player)
     end
 end
@@ -164,16 +215,16 @@ end
 
 function gui.update_direction_button(states, button, direction)
     if states[direction] == "flow" then
-        button.sprite="icon/fc-flow-"..direction
+        button.sprite="fc-flow-"..direction
         button.enable=true
     elseif states[direction] == "open" then
-        button.sprite="icon/fc-open-"..direction
+        button.sprite="fc-open-"..direction
         button.enable=true
     elseif states[direction] == "close" then
-        button.sprite="icon/fc-close-"..direction
+        button.sprite="fc-close-"..direction
         button.enable=true
     elseif states[direction] == "block" then
-        button.sprite="icon/fc-block-"..direction
+        button.sprite="fc-block-"..direction
         button.enable=false
     else
         button.sprite=nil
@@ -182,7 +233,9 @@ function gui.update_direction_button(states, button, direction)
 end
 
 function gui.update(player, pipe)
-    local gui_instance = player.gui.relative.pipe_config.frame_content.flow_content
+    local gui_instance = player.gui.relative.flow_config.frame_content.flow_content
+
+    local states = pipe_utils.get_direction_states(pipe)
 
     gui.update_toggle_button(states, gui_instance.toggle_content.toggle_button)
     gui.update_direction_button(states, gui_instance.table_direction.children[2], "north")
@@ -205,12 +258,7 @@ function gui.update_all(pipe)
     end
 end
 
-local index_to_direction = {
-    2 = "north",
-    4 = "west",
-    6 = "east",
-    8 = "south"
-}
+local index_to_direction = { [2] = "north", [4] = "west", [6] = "east", [8] = "south" }
 
 function gui.get_button_direction(button)
     local idx = button.get_index_in_parent()
@@ -229,12 +277,26 @@ end
 
 -- GUI events -------------------------------------------------------------------------------------
 
+local function on_init()
+    gui.create_all()
+end
+
+local function on_configuration_changed(cfg_changed_data)
+    gui.create_all()
+    gui.update_all()
+end
+
 local function on_gui_opened(event)
 	local player = game.players[event.player_index]
 
 	if event.entity and event.entity.type == "pipe" then
 		gui.update(player, event.entity)
 	end
+end
+
+local function on_player_created(event)
+	local player = game.players[event.player_index]
+	gui.create(player)
 end
 
 local function on_gui_click(event)
@@ -245,7 +307,29 @@ local function on_gui_click(event)
     elseif event.element.parent == gui_instance.table_direction and event.element ~= gui_instance.table_direction.sprite_pipe then
         gui.on_button_direction(player, event)
     end
-    gui.update(player, event.entity)
-    
+end 
+
+local function on_entity_settings_pasted(event)
+    local player = game.players[event.player_index]
+    local directions = pipe_utils.get_direction_states(event.source)
+    if pipe_utils.check_direction_limits(event.destination, directions) then
+        local newpipe = pipe_utils.replace_pipe(player, event.destination, directions)
+        if newpipe ~= nil then
+            gui.update_all(newpipe)
+        end
+    end
+end
+
+script.on_init(on_init)
+script.on_configuration_changed(on_configuration_changed)
+script.on_event(defines.events.on_gui_opened, on_gui_opened)
+script.on_event(defines.events.on_player_created, on_player_created)
+
+script.on_event(defines.events.on_gui_click, on_gui_click)
+script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
+
+-- hotkey events ----------------------------------------------------------------------------------
+
+
 
 ---------------------------------------------------------------------------------------------------

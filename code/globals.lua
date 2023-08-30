@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 
 local g = {}
-g.this_mod_name = "Flow_Config"
+g.this_mod_name = "FlowConfig"
 g.icon_path = "__"..g.this_mod_name.."__/graphics/icons"
 
 g.directions = {
