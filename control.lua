@@ -37,14 +37,17 @@ function pipe_utils.check_flow_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
     local dirpos = g.directions[direction].position
-    --local targetpos = math2d.position.tilepos(math2d.position.add(pipe.position, dirpos))
     if #pipe.fluidbox.get_pipe_connections(1) > 0 then
         for _,connection in pairs(pipe.fluidbox.get_pipe_connections(1)) do
-            if connection.target ~= nil then
-
-                -- if math
-                --     states[direction] = "flow"
-                -- end
+            if connection.target ~= nil and connection.target_pipe_connection_index ~= nil then
+                local target_connection = connection.target.get_pipe_connections(1)[connection.target_pipe_connection_index]
+                local delta = math2d.position.subtract(target_connection.position, connection.position)
+                -- log("FlowConfig: delta = "..serpent.block(delta))
+                -- game.print("FlowConfig: delta = "..serpent.block(delta))
+                if math2d.position.equal(dirpos, delta) then
+                    states[direction] = "flow"
+                    states.directions[direction] = true
+                end
             end
         end
     end
@@ -82,48 +85,79 @@ function pipe_utils.check_open_state(pipe, states, direction)
             states.directions[direction] = true
         end
     else
+        -- if the junction is nil, then we have a vanilla pipe
         states[direction] = "open"
         states.directions[direction] = true
     end
-    -- local dirpos = g.directions[direction].position
-    -- for _,connection in pairs(pipe.fluidbox.get_prototype(1).pipe_connections) do
-    --     for _,position in pairs(connection.positions) do
-    --         if math2d.position.equal(position, dirpos) then
-    --             states[direction] = "open"
-    --             states.directions[direction] = true
-    --             return
-    --         end
-    --     end
-    -- end
+end
+
+function pipe_utils.are_fluids_compatible(pipe, other, other_index)
+    -- assume each has at least one fluid box
+    local fluids_a = pipe.get_fluid_contents()
+    local fluids_b = other.fluidbox.get_fluid_system_contents(other_index)
+    if fluids_b == nil then return true end
+    game.print("pipe.fluids="..serpent.block(fluids_a))
+    game.print("other.fluids="..serpent.block(fluids_b))
+    -- artificially add a fluid entry of 0 for filtered fluids
+    if pipe.fluidbox.get_filter(1) ~= nil then
+        local filter = pipe.fluidbox.get_filter(1)
+        fluids_a[filter.name] = 0
+    end
+    game.print("pipe.post-filter="..serpent.block(fluids_a))
+    -- do the same for other
+    if other.fluidbox.get_filter(other_index) ~= nil then
+        local filter = other.fluidbox.get_filter(other_index)
+        fluids_b[filter.name] = 0
+    end
+    game.print("other.post-filter="..serpent.block(fluids_b))
+
+    for name,amount in pairs(fluids_a) do
+        game.print("searching in b for "..name)
+        if fluids_b[name] == nil then
+            return false
+        end
+    end
+
+    return true
 end
 
 function pipe_utils.check_block_state(pipe, states, direction)
     if states[direction] ~= nil then return end
 
-    -- local dirpos = g.directions[direction].position
-    -- local searchpos = { pipe.position.x + dirpos.x, pipe.position.y + dirpos.y }
-    -- local otherpipe = pipe.surface.find_entity("pipe", searchpos)
-    -- if otherpipe ~= nil then
-    --     if #pipe.get_fluid_contents() ~= #otherpipe.get_fluid_contents() then
-    --         states[direction] = "block"
-    --         return
-    --     end
-    --     -- check if the fluid types match between the two pipes (since even with 2+ fluids, technically that's the flow state)
-    --     for fluid_a,_ in pairs(pipe.get_fluid_contents()) do
-    --         local found = false
-    --         for fluid_b,_ in pairs(otherpipe.get_fluid_contents()) do
-    --             if fluid_a == fluid_b then
-    --                 found = true
-    --                 break
-    --             end
-    --         end
-    --         -- if we can't find one of the fluids, it's a mismatch and we shouldn't allow opening the flow
-    --         if found ~= true then
-    --             states[direction] = "block"
-    --             return
-    --         end
-    --     end
-    -- end
+    local dirpos = g.directions[direction].position
+    local searchpos = math2d.position.add(pipe.position, dirpos)
+    -- search for pipes
+    local otherpipe = pipe.surface.find_entity("pipe", searchpos)
+    if otherpipe ~= nil then
+        if pipe_utils.are_fluids_compatible(pipe, otherpipe, 1) ~= true then
+            states[direction] = "block"
+            return
+        end
+    end
+    
+    -- search for other entities
+    --local others = pipe.surface.find_entities({searchpos,searchpos})
+    
+    -- then search for other entities?? (should I just make this an "any" entity search?)
+    local othertank = pipe.surface.find_entity("storage-tank", searchpos)
+    if othertank ~= nil then
+        -- check if a connection exists at the searchpos
+        local connection_found = false
+        if #othertank.fluidbox > 0 then
+            for i=1,#othertank.fluidbox do
+                if #othertank.fluidbox.get_pipe_connections(i) > 0 then
+                    for _,connection in pairs(othertank.fluidbox.get_pipe_connections(i)) do
+                        if math2d.position.equal(connection.position, searchpos) then
+                            if pipe_utils.are_fluids_compatible(pipe, othertank, i) ~= true then
+                                states[direction] = "block"
+                            end
+                            return
+                        end
+                    end
+                end
+            end
+        end
+    end
 end
 
 function pipe_utils.check_close_state(pipe, states, direction)
@@ -136,18 +170,6 @@ function pipe_utils.check_close_state(pipe, states, direction)
             states[direction] = "close"
         end
     end
-    -- local dirpos = g.directions[direction].position
-    -- for _,connection in pairs(pipe.fluidbox.get_prototype(1).pipe_connections) do
-    --     local found = false
-    --     for _,position in pairs(connection.positions) do
-    --         if math2d.position.equal(position, dirpos) then
-    --             found = true
-    --         end
-    --     end
-    --     if found ~= false then
-    --         states[direction] = "close"
-    --     end
-    -- end
 end
 
 function pipe_utils.get_direction_states(pipe)
@@ -155,10 +177,10 @@ function pipe_utils.get_direction_states(pipe)
     for dir,_ in pairs(g.directions) do
         -- check flow and open before block and close: they're more true-to-state, even if something weird exists in the pipes
         -- check flow before open: flow is a special case of open, purely cosmetic
-        -- pipe_utils.check_flow_state(pipe, states, dir)
+        pipe_utils.check_flow_state(pipe, states, dir)
         pipe_utils.check_open_state(pipe, states, dir)
         -- check block before close: don't allow opening a pipe with a mismatched fluid state
-        --pipe_utils.check_block_state(pipe, states, dir)
+        pipe_utils.check_block_state(pipe, states, dir)
         pipe_utils.check_close_state(pipe, states, dir)
     end
     return states
@@ -176,9 +198,9 @@ end
 function pipe_utils.replace_pipe(player, pipe, directions)
     local newname = f.construct_pipename(f.get_pipe_info(pipe.name).base, directions)
     local newpipe = player.surface.create_entity{name=newname, position=pipe.position, force=player.force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
-    if newpipe ~= nil then
-        player.update_selected_entity(newpipe.position)
-    end
+    -- if newpipe ~= nil then
+    --     player.update_selected_entity(newpipe.position)
+    -- end
     return newpipe
 end
 
@@ -311,7 +333,7 @@ function gui.update_all(pipe)
     end
 end
 
-local index_to_direction = { [2] = "north", [4] = "west", [6] = "east", [8] = "south" }
+local index_to_direction = {[2] = "north", [4] = "west", [6] = "east", [8] = "south"}
 
 function gui.get_button_direction(button)
     local idx = button.get_index_in_parent()

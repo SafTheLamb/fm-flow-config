@@ -31,13 +31,13 @@ function f.get_pipe_info(pipename)
 end
 
 function f.construct_pipename(basename, directions)
-    if #directions == 4 then return basename end
-    local suffix = "-"
+    local suffix = ""
     if (directions["north"] ~= nil) then suffix = suffix.."n" end
     if (directions["east"] ~= nil) then suffix = suffix.."e" end
     if (directions["south"] ~= nil) then suffix = suffix.."s" end
     if (directions["west"] ~= nil) then suffix = suffix.."w" end
-    return basename..suffix
+    if suffix == "nesw" then return basename end
+    return basename.."-"..suffix
 end
 
 return f
