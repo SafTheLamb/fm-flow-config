@@ -30,6 +30,11 @@ function f.get_pipe_info(pipename)
     return {base="pipe"}
 end
 
+local opposite_map = {["north"]="south", ["east"]="west", ["south"]="north", ["west"]="east"}
+function f.get_opposite(direction)
+    return opposite_map[direction]
+end
+
 function f.construct_pipename(basename, directions)
     local suffix = ""
     if (directions["north"] ~= nil) then suffix = suffix.."n" end
