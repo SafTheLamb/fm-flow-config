@@ -1,17 +1,15 @@
 ---------------------------------------------------------------------------------------------------
 
-local g = {}
-g.this_mod_name = "FlowConfig"
-g.icon_path = "__"..g.this_mod_name.."__/graphics/icons"
+if GFC == nil then GFC = {} end
 
-g.directions = {
+GFC.directions = {
     north = { position = {x= 0, y=-1} },
     east = { position =  {x= 1, y= 0} },
     south = { position = {x= 0, y= 1} },
     west = { position =  {x=-1, y= 0} },
 }
 
-g.junctions = {
+GFC.junctions = {
     -- straight ---------------------------------
     ns = {
         directions = { ["north"]=true, ["south"]=true },
@@ -92,13 +90,5 @@ g.junctions = {
         }
     },
 }
-
----------------------------------------------------------------------------------------------------
-
-g.base_pipe_names = { "pipe" }
-
--- TODO: Add base pipes from IR3
-
-return g
 
 ---------------------------------------------------------------------------------------------------

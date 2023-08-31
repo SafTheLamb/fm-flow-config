@@ -1,49 +1,136 @@
 ---------------------------------------------------------------------------------------------------
 
-require("code.ui-icons")
-require("code.input")
+require("code.globals")
 
-local f = require("code.functions")
+---------------------------------------------------------------------------------------------------
 
-f.create_junction_entities("pipe")
+local function create_junction_entities(basename)
+    for juncname,junction in pairs(GFC.junctions) do
+        local copy = util.table.deepcopy(data.raw.pipe[basename])
+        copy.name = basename.."-"..juncname
+        if copy.localised_name == nil then copy.localised_name = { "entity-name."..basename } end
+        copy.fluid_box.pipe_connections = junction.connections
+        copy.placeable_by = { item = basename, count = 1 }
 
--- THIS WORKS!!
+        data:extend({copy})
+    end
+end
 
--- data:extend({
---     {
---         type = "item",
---         name = "pipe-t-left",
---         icon = pipepictures().t_left.filename,
---         icon_size = 64, icon_mipmaps = 4,
---         subgroup = "energy-pipe-distribution",
---         order = "a[pipe]-a[pipe]b",
---         place_result = "pipe-t-left",
---         stack_size = 100
---     },
---     {
---         type = "recipe",
---         name = "pipe-t-left",
---         ingredients = {{"iron-plate", 1}},
---         result = "pipe-t-left",
---     },
--- })
+create_junction_entities("pipe")
+if mods["IndustrialRevolution3"] then
+    create_junction_entities("copper-pipe")
+    create_junction_entities("steam-pipe")
+    create_junction_entities("air-pipe")
+end
 
--- pipe_no_right = util.table.deepcopy(data.raw.pipe["pipe"])
--- pipe_no_right.name = "pipe-t-left"
--- pipe_no_right.fluid_box =
--- {
---     base_area = 1,
---     pipe_connections =
---     {
---         { position = {0, -1} },
---         { position = {0, 1} },
---         { position = {-1, 0} },
---     }
--- }
--- pipe_no_right.placeable_by = {item = "pipe", count = 4}
+---------------------------------------------------------------------------------------------------
 
--- data:extend({
---     pipe_no_right
--- })
+local function get_icon_path(name)
+    return "__FlowConfig__/graphics/icons/40/"..name..".png"
+end
+
+for direction,_ in pairs(GFC.directions) do
+    data:extend({
+        {
+            type = "sprite",
+            name = "fc-flow-"..direction,
+            filename = get_icon_path("flow-"..direction),
+            flags = { "gui-icon" },
+            width = 40,
+            height = 40,
+            scale = 0.5,
+            priority = "extra-high-no-scale"
+        },
+        {
+            type = "sprite",
+            name = "fc-open-"..direction,
+            filename = get_icon_path("open-"..direction),
+            flags = { "gui-icon" },
+            width = 40,
+            height = 40,
+            scale = 0.5,
+            priority = "extra-high-no-scale"
+        },
+        {
+            type = "sprite",
+            name = "fc-close-"..direction,
+            filename = get_icon_path("close-"..direction),
+            flags = { "gui-icon" },
+            width = 40,
+            height = 40,
+            scale = 0.5,
+            priority = "extra-high-no-scale"
+        },
+        {
+            type = "sprite",
+            name = "fc-block-"..direction,
+            filename = get_icon_path("block-"..direction),
+            flags = { "gui-icon" },
+            width = 40,
+            height = 40,
+            scale = 0.5,
+            priority = "extra-high-no-scale"
+        },
+    })
+end
+
+data:extend({
+    {
+        type = "sprite",
+        name = "fc-toggle-open",
+        filename = get_icon_path("toggle-open"),
+        flags = { "gui-icon" },
+        width = 40,
+        height = 40,
+        scale = 0.5,
+        priority = "extra-high-no-scale",
+    },
+    {
+        type = "sprite",
+        name = "fc-toggle-close",
+        filename = get_icon_path("toggle-close"),
+        flags = { "gui-icon" },
+        width = 40,
+        height = 40,
+        scale = 0.5,
+        priority = "extra-high-no-scale",
+    },
+    {
+        type = "sprite",
+        name = "fc-toggle-locked",
+        filename = get_icon_path("toggle-locked"),
+        flags = { "gui-icon" },
+        width = 40,
+        height = 40,
+        scale = 0.5,
+        priority = "extra-high-no-scale",
+    },
+})
+
+---------------------------------------------------------------------------------------------------
+
+data:extend({
+    {
+        type = "custom-input",
+        name = "fc-toggle",
+        key_sequence = "SHIFT + E",
+        consuming = "none",
+        order = "0",
+    },
+    {
+        type = "custom-input",
+        name = "fc-lock",
+        key_sequence = "",
+        consuming = "none",
+        order = "0",
+    },
+    {
+        type = "custom-input",
+        name = "fc-unlock",
+        key_sequence = "",
+        consuming = "none",
+        order = "0",
+    },
+})
 
 ---------------------------------------------------------------------------------------------------
