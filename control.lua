@@ -2,7 +2,7 @@
 
 require("code.globals")
 
-local math2d = require("math2d")
+---------------------------------------------------------------------------------------------------
 
 local pipe_names = { "pipe" }
 if script.active_mods["IndustrialRevolution3"] then
@@ -21,15 +21,18 @@ end
 
 -- math utils -------------------------------------------------------------------------------------
 
+local math2d = require("math2d")
+
 function math2d.position.equal(p1, p2)
 	p1 = math2d.position.ensure_xy(p1)
 	p2 = math2d.position.ensure_xy(p2)
 	return p1.x == p2.x and p1.y == p2.y
 end
 
-function math2d.position.tilepos(pos)
-	pos = math2d.position.ensure_xy(pos)
-	return {x=math.floor(pos.x), y=math.floor(pos.y)}
+function math2d.position.dot_product(p1, p2)
+	p1 = math2d.position.ensure_xy(p1)
+	p2 = math2d.position.ensure_xy(p2)
+	return p1.x * p2.x + p1.y * p2.y
 end
 
 -- pipe utils -------------------------------------------------------------------------------------
@@ -47,6 +50,10 @@ function pipe_utils.is_pipe(entity)
     return entity and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
 end
 
+function pipe_utils.is_pipe_to_ground(entity)
+    return entity and (entity.type == "pipe-to-ground" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe-to-ground"))
+end
+
 function pipe_utils.is_flowing(pipe, direction)
     local dirpos = GFC.directions[direction].position
     if #pipe.fluidbox.get_pipe_connections(1) > 0 then
@@ -55,7 +62,8 @@ function pipe_utils.is_flowing(pipe, direction)
             if connection.target ~= nil and connection.target_pipe_connection_index ~= nil then
                 local target_connection = connection.target.get_pipe_connections(1)[connection.target_pipe_connection_index]
                 local delta = math2d.position.subtract(target_connection.position, connection.position)
-                if math2d.position.equal(dirpos, delta) then
+                -- use dot >= 1 instead of a==b to include underground pipe connections
+                if math2d.position.dot_product(dirpos, delta) >= 1 then
                     return true
                 end
             end
@@ -199,6 +207,37 @@ function pipe_utils.get_direction_states(pipe)
     return states
 end
 
+local defines_to_direction = {
+    [defines.direction.north]="north",
+    [defines.direction.east]="east",
+    [defines.direction.south]="south",
+    [defines.direction.west]="west",
+}
+
+function pipe_utils.is_aligned(pipe, direction)
+    local pipe_direction = defines_to_direction[pipe.direction]
+    return direction == pipe_direction or direction == pipe_utils.get_opposite(pipe_direction)
+end
+
+function pipe_utils.get_pipe_to_ground_direction_states(pipe)
+    local states = {directions={}, num_flow=0, num_open=0, num_block=0, num_close=0}
+    for dir,_ in pairs(GFC.directions) do
+        -- flow state still has higher priority
+        if pipe_utils.is_flowing(pipe, dir) then
+            states[dir] = "flow"
+            states.directions[dir] = true
+            states.num_flow = states.num_flow + 1
+        -- we have less control over pipe-to-ground, but we can just check the direction
+        elseif pipe_utils.is_aligned(pipe, dir) then
+            states[dir] = "open"
+            states.directions[dir] = true
+            states.num_open = states.num_open + 1
+        end
+    end
+
+    return states
+end
+
 function pipe_utils.check_direction_limits(pipe, directions)
     if #directions < 2 then return false end
     local states = pipe_utils.get_direction_states(pipe)
@@ -208,7 +247,9 @@ function pipe_utils.check_direction_limits(pipe, directions)
     return true
 end
 
-local function construct_pipename(basename, directions)
+---------------------------------------------------------------------------------------------------
+
+function pipe_utils.construct_pipename(basename, directions)
     local suffix = ""
     if (directions["north"] ~= nil) then suffix = suffix.."n" end
     if (directions["east"] ~= nil) then suffix = suffix.."e" end
@@ -219,7 +260,7 @@ local function construct_pipename(basename, directions)
 end
 
 function pipe_utils.replace_pipe(player, pipe, directions)
-    local newname = construct_pipename(pipe_utils.get_pipe_info(pipe.name).base, directions)
+    local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.name).base, directions)
     local newpipe = player.surface.create_entity{name=newname, position=pipe.position, force=player.force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
     return newpipe
 end
@@ -307,7 +348,7 @@ function gui.create_all()
 end
 
 function gui.update_toggle_button(states, button)
-    local can_close = (states.num_open > 0 and states.num_flow >= 2 and states.num_close + states.num_block < 2)
+    local can_close = (states.num_open > 0 and states.num_flow >= 2)
     local can_open = (states.num_close > 0)
     if can_close then
         button.sprite = "fc-toggle-close"
@@ -325,7 +366,7 @@ function gui.update_toggle_button(states, button)
 end
 
 function gui.update_direction_button(states, button, direction)
-    local can_close_any = (states.num_open > 0 and states.num_close + states.num_block < 2)
+    local can_close_any = (states.num_open + states.num_flow > 2)
     if states[direction] == "flow" then
         button.sprite = "fc-flow-"..direction
         button.enabled = can_close_any
@@ -356,6 +397,24 @@ function gui.update(player, pipe)
     gui.update_direction_button(states, gui_instance.table_direction.children[8], "south")
 
     local icon = "item/pipe"
+    if pipe.prototype.items_to_place_this then
+        icon = "item/"..pipe.prototype.items_to_place_this[1].name
+    end
+    gui_instance.table_direction.sprite_pipe.sprite = icon
+end
+
+function gui.update_pipe_to_ground(player, pipe)
+    local gui_instance = player.gui.relative.flow_config.frame_content.flow_content
+
+    local states = pipe_utils.get_pipe_to_ground_direction_states(pipe)
+
+    gui.update_toggle_button(states, gui_instance.toggle_content.toggle_button)
+    gui.update_direction_button(states, gui_instance.table_direction.children[2], "north")
+    gui.update_direction_button(states, gui_instance.table_direction.children[4], "west")
+    gui.update_direction_button(states, gui_instance.table_direction.children[6], "east")
+    gui.update_direction_button(states, gui_instance.table_direction.children[8], "south")
+
+    local icon = "item/pipe-to-ground"
     if pipe.prototype.items_to_place_this then
         icon = "item/"..pipe.prototype.items_to_place_this[1].name
     end
@@ -431,8 +490,10 @@ end
 local function on_gui_opened(event)
 	local player = game.players[event.player_index]
 
-	if event.entity and event.entity.type == "pipe" then
+	if pipe_utils.is_pipe(event.entity) then
 		gui.update(player, event.entity)
+    elseif pipe_utils.is_pipe_to_ground(event.entity) then
+        gui.update_pipe_to_ground(player, event.entity)
 	end
 end
 
