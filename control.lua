@@ -78,9 +78,14 @@ function pipe_utils.are_fluids_compatible(pipe, otherbox, other_index)
         return true
     end
 
-    -- otherwise, make sure they have all the fluids we do
+    -- otherwise, make sure all the fluids match
     for name,amount in pairs(fluids_a) do
         if fluids_b[name] == nil then
+            return false
+        end
+    end
+    for name,amount in pairs(fluids_b) do
+        if fluids_a[name] == nil then
             return false
         end
     end
@@ -283,8 +288,33 @@ function pipe_utils.construct_pipename(basename, directions)
 end
 
 function pipe_utils.replace_pipe(player, pipe, directions)
-    local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.name).base, directions)
-    local newpipe = player.surface.create_entity{name=newname, position=pipe.position, force=player.force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
+    local force = player ~= nil and player.force or pipe.force
+    if pipe.type == "entity-ghost" then
+        local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.ghost_name).base, directions)
+        local newpipe = pipe.surface.create_entity{name="entity-ghost", inner_name=newname, position=pipe.position, force=force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
+        if pipe ~= nil then pipe.destroy() end -- TODO: Test me??
+    else
+        -- copy the fluids from the old pipe
+        local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.name).base, directions)
+        local fluids = {}
+        if #pipe.fluidbox > 0 then
+            for i=1,#pipe.fluidbox do
+                table.insert(fluids, pipe.fluidbox[i])
+            end
+        end
+        
+        -- destroy the old pipe first so the new pipe can seamlessly slot into its connections
+        local position = pipe.position
+        local surface = pipe.surface
+        pipe.clear_fluid_inside()
+        pipe.destroy()
+
+        -- create the new pipe and destroy the old one
+        local newpipe = surface.create_entity{name=newname, position=position, force=force, player=player, spill=false, create_build_effect_smoke=false}
+        for _,fluid in pairs(fluids) do
+            newpipe.insert_fluid(fluid)
+        end
+    end
     return newpipe
 end
 
@@ -586,7 +616,7 @@ local function on_entity_settings_pasted(event)
             else
                 -- don't open pipe flow if it's blocked
                 player.create_local_flying_text{text={"fc-tools.cant-open-blocked"}, create_at_cursor=true}
-                player.play_sound{path="utility/cannot_build"}
+                player.play_sound{path="utility/cannot_build", position=pipe.position}
                 return
             end
         end
@@ -599,7 +629,8 @@ local function on_entity_settings_pasted(event)
     
     -- don't put the pipe into an invalid state (should not be possible anymore)
     if num_open < 2 then
-        player.play_sound{path="utility/cannot_build"}
+        player.create_local_flying_text{text={"fc-tools.cant-place-invalid"}, create_at_cursor=true}
+        player.play_sound{path="utility/cannot_build", position=pipe.position}
         return
     end
     

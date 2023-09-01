@@ -12,6 +12,7 @@ local function create_junction_entities(basename)
         if copy.localised_name == nil then copy.localised_name = { "entity-name."..basename } end
         copy.fluid_box.pipe_connections = junction.connections
         copy.placeable_by = { item = basename, count = 1 }
+        copy.fast_replaceable_group = nil
         table.insert(copy.flags, "hidden")
         
         table.insert(all_pipe_entities, copy.name)
@@ -152,6 +153,7 @@ data:extend({
     order = "fc-k",
     action = "spawn-item",
     localised_name = {"fc-tools.flow-key-tool"},
+    associated_control_input = "give-flow-key-tool",
     item_to_spawn = "fc-flow-key-tool",
     style = "blue",
     icon =
