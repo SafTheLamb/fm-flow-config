@@ -4,15 +4,15 @@ require("code.globals")
 
 ---------------------------------------------------------------------------------------------------
 
-local pipe_names = { "pipe" }
+local base_pipe_names = { "pipe" }
 if script.active_mods["IndustrialRevolution3"] then
-    table.insert(pipe_names, "copper-pipe")
-    table.insert(pipe_names, "steam-pipe")
-    table.insert(pipe_names, "air-pipe")
+    table.insert(base_pipe_names, "copper-pipe")
+    table.insert(base_pipe_names, "steam-pipe")
+    table.insert(base_pipe_names, "air-pipe")
 end
 
 local pipe_map = {}
-for _,basename in pairs(pipe_names) do
+for _,basename in pairs(base_pipe_names) do
     for juncname,_ in pairs(GFC.junctions) do
         pipe_map[basename.."-"..juncname] = {base=basename, junction=juncname}
     end
@@ -88,9 +88,10 @@ function pipe_utils.are_fluids_compatible(pipe, otherbox, other_index)
     return true
 end
 
-function pipe_utils.is_flowing(pipe, direction)
-    local dirpos = GFC.directions[direction].position
+function pipe_utils.is_flowing(pipe, dir)
+    local dirpos = GFC.directions[dir].position
     local searchpos = math2d.position.add(pipe.position, dirpos)
+
     -- try with pipe connections first
     if #pipe.fluidbox.get_pipe_connections(1) > 0 then
         for _,connection in pairs(pipe.fluidbox.get_pipe_connections(1)) do
@@ -104,13 +105,16 @@ function pipe_utils.is_flowing(pipe, direction)
             end
         end
     end
-    -- also check fluidbox connections?
+
+    -- also check for fluidbox connections (connections from outputs don't count as pipe connections, since they're 1-way)
     if #pipe.fluidbox.get_connections(1) > 0 then
         for _,otherbox in pairs(pipe.fluidbox.get_connections(1)) do
             if #otherbox > 0 then
                 for i=1,#otherbox do
+                    -- check pipe connections from the other fluidboxes for connections with this pipe
                     if #otherbox.get_pipe_connections(i) > 0 then
                         for _,connection in pairs(otherbox.get_pipe_connections(i)) do
+                            -- if the searchpos matches the connection position, we have the right fluidbox
                             if math2d.position.equal(connection.position, searchpos) then
                                 if pipe_utils.are_fluids_compatible(pipe, otherbox, i) then
                                     return true
@@ -123,23 +127,6 @@ function pipe_utils.is_flowing(pipe, direction)
         end
     end
 
-        -- if other.fluidbox ~= nil and #other.fluidbox > 0 then
-        --     for i=1,#other.fluidbox do
-        --         -- check if a connection exists at the searchpos
-        --         if #other.fluidbox.get_pipe_connections(i) > 0 then
-        --             for _,connection in pairs(other.fluidbox.get_pipe_connections(i)) do
-        --                 if math2d.position.equal(connection.position, searchpos) then
-        --                     -- if the fluids are not compatible, then block the connection
-        --                     if pipe_utils.are_fluids_compatible(pipe, other, i) ~= true then
-        --                         return true
-        --                     end
-        --                     return false
-        --                 end
-        --             end
-        --         end
-        --     end
-        -- end
-
     return false
 end
 
@@ -150,12 +137,12 @@ function pipe_utils.get_pipe_info(pipename)
     return {base="pipe"}
 end
 
-function pipe_utils.is_open(pipe, direction)
+function pipe_utils.is_open(pipe, dir)
     -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
     local pipeinfo = pipe_utils.get_pipe_info(pipe.name)
     if pipeinfo.junction ~= nil then
         local junction = GFC.junctions[pipeinfo.junction]
-        if junction.directions[direction] ~= nil then
+        if junction.directions[dir] ~= nil then
             return true
         end
     else
@@ -166,12 +153,12 @@ function pipe_utils.is_open(pipe, direction)
     return false
 end
 
-function pipe_utils.is_closed(pipe, direction)
+function pipe_utils.is_closed(pipe, dir)
     -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
     local pipeinfo = pipe_utils.get_pipe_info(pipe.name)
     if pipeinfo.junction ~= nil then
         local junction = GFC.junctions[pipeinfo.junction]
-        if junction.directions[direction] == nil then
+        if junction.directions[dir] == nil then
             return true
         end
     end
@@ -179,12 +166,24 @@ function pipe_utils.is_closed(pipe, direction)
 end
 
 local opposite_map = {["north"]="south", ["east"]="west", ["south"]="north", ["west"]="east"}
-function pipe_utils.get_opposite(direction)
-    return opposite_map[direction]
+function pipe_utils.get_opposite(dir)
+    return opposite_map[dir]
 end
 
-function pipe_utils.is_blocked(pipe, direction)
-    local dirpos = GFC.directions[direction].position
+local defines_to_direction = {
+    [defines.direction.north]="north",
+    [defines.direction.east]="east",
+    [defines.direction.south]="south",
+    [defines.direction.west]="west",
+}
+
+function pipe_utils.is_aligned(groundpipe, dir)
+    local pipedir = defines_to_direction[groundpipe.direction]
+    return dir == pipedir or dir == pipe_utils.get_opposite(pipedir)
+end
+
+function pipe_utils.is_blocked(pipe, dir, ignore_close)
+    local dirpos = GFC.directions[dir].position
     local searchpos = math2d.position.add(pipe.position, dirpos)
     
     -- search for all neighboring entities at the search position
@@ -192,8 +191,13 @@ function pipe_utils.is_blocked(pipe, direction)
     if #others > 0 then
         for _,other in pairs(others) do
             -- if the entity is a pipe and it's closed in this direction, we don't have to be blocked
-            if other.type == "pipe" then
-                if pipe_utils.is_closed(other, pipe_utils.get_opposite(direction)) then
+            if other.type == "pipe" and ignore_close ~= true then
+                if pipe_utils.is_closed(other, pipe_utils.get_opposite(dir)) then
+                    return false
+                end
+            -- if the entity is a ground pipe and it's not facing this direction, we don't have to be blocked
+            elseif other.type == "pipe-to-ground" then
+                if dir ~= pipe_utils.get_opposite(defines_to_direction[other.direction]) then
                     return false
                 end
             end
@@ -247,18 +251,6 @@ function pipe_utils.get_direction_states(pipe)
     return states
 end
 
-local defines_to_direction = {
-    [defines.direction.north]="north",
-    [defines.direction.east]="east",
-    [defines.direction.south]="south",
-    [defines.direction.west]="west",
-}
-
-function pipe_utils.is_aligned(pipe, direction)
-    local pipe_direction = defines_to_direction[pipe.direction]
-    return direction == pipe_direction or direction == pipe_utils.get_opposite(pipe_direction)
-end
-
 function pipe_utils.get_pipe_to_ground_direction_states(pipe)
     local states = {directions={}, num_flow=0, num_open=0, num_block=0, num_close=0}
     for dir,_ in pairs(GFC.directions) do
@@ -278,23 +270,14 @@ function pipe_utils.get_pipe_to_ground_direction_states(pipe)
     return states
 end
 
-function pipe_utils.check_direction_limits(pipe, directions)
-    if #directions < 2 then return false end
-    local states = pipe_utils.get_direction_states(pipe)
-    for _,direction in pairs(directions) do
-        if states[direction] == "block" then return false end
-    end
-    return true
-end
-
 ---------------------------------------------------------------------------------------------------
 
 function pipe_utils.construct_pipename(basename, directions)
     local suffix = ""
-    if (directions["north"] ~= nil) then suffix = suffix.."n" end
-    if (directions["east"] ~= nil) then suffix = suffix.."e" end
-    if (directions["south"] ~= nil) then suffix = suffix.."s" end
-    if (directions["west"] ~= nil) then suffix = suffix.."w" end
+    if (directions["north"]) then suffix = suffix.."n" end
+    if (directions["east"]) then suffix = suffix.."e" end
+    if (directions["south"]) then suffix = suffix.."s" end
+    if (directions["west"]) then suffix = suffix.."w" end
     if suffix == "nesw" then return basename end
     return basename.."-"..suffix
 end
@@ -305,28 +288,69 @@ function pipe_utils.replace_pipe(player, pipe, directions)
     return newpipe
 end
 
-function pipe_utils.open_direction(player, pipe, directions, direction)
-    if directions[direction] == nil then
-        directions[direction] = true
+function pipe_utils.open_direction(player, pipe, directions, dir)
+    if directions[dir] == nil then
+        directions[dir] = true
         return pipe_utils.replace_pipe(player, pipe, directions)
     end
     return nil
 end
 
-function pipe_utils.close_direction(player, pipe, directions, direction)
-    if directions[direction] ~= nil then
-        directions[direction] = nil
+function pipe_utils.close_direction(player, pipe, directions, dir)
+    if directions[dir] ~= nil then
+        directions[dir] = nil
         return pipe_utils.replace_pipe(player, pipe, directions)
     end
     return nil
 end
 
-function pipe_utils.toggle_direction(player, pipe, direction)
+function pipe_utils.toggle_direction(player, pipe, dir)
     local states = pipe_utils.get_direction_states(pipe)
-    if states[direction] == "flow" or states[direction] == "open" then
-        return pipe_utils.close_direction(player, pipe, states.directions, direction)
-    elseif states[direction] == "close" then
-        return pipe_utils.open_direction(player, pipe, states.directions, direction)
+    if states[dir] == "flow" or states[dir] == "open" then
+        return pipe_utils.close_direction(player, pipe, states.directions, dir)
+    elseif states[dir] == "close" then
+        return pipe_utils.open_direction(player, pipe, states.directions, dir)
+    end
+    return nil
+end
+
+function pipe_utils.can_lock(states)
+    return (states.num_open > 0 and states.num_flow >= 2)
+end
+
+function pipe_utils.can_unlock(states)
+    return (states.num_close > 0)
+end
+
+function pipe_utils.try_lock_pipe(player, pipe)
+    local states = pipe_utils.get_direction_states(pipe)
+    if not pipe_utils.can_lock(states) then return nil end
+
+    for dir,_ in pairs(GFC.directions) do
+        if states[dir] == "open" then
+            states.directions[dir] = nil
+        end
+    end
+
+    return pipe_utils.replace_pipe(player, pipe, states.directions)
+end
+
+function pipe_utils.try_unlock_pipe(player, pipe, check_fluid_compatibility)
+    local states = pipe_utils.get_direction_states(pipe)
+    if not pipe_utils.can_unlock(states) then return nil end
+
+    local do_unlock = false
+    for dir,_ in pairs(GFC.directions) do
+        if states[dir] == "close" then
+            if (not check_fluid_compatibility) or (not pipe_utils.is_blocked(pipe, dir, true)) then
+                states.directions[dir] = true
+                do_unlock = true
+            end
+        end
+    end
+
+    if do_unlock then
+        return pipe_utils.replace_pipe(player, pipe, states.directions)
     end
     return nil
 end
@@ -337,20 +361,20 @@ local gui = {}
 
 function gui.create(player)
     local frame_main_anchor = {gui = defines.relative_gui_type.pipe_gui, position = defines.relative_gui_position.right}
-    local frame_main = player.gui.relative.add({type="frame", name="flow_config", caption={"gui-flow-config.configuration"}, anchor=frame_main_anchor})
+    local frame_main = player.gui.relative.add({type="frame", name="flow_config", caption={"fc-gui.configuration"}, anchor=frame_main_anchor})
 
     local frame_content = frame_main.add({type="frame", name="frame_content", style="inside_shallow_frame_with_padding"})
     local flow_content = frame_content.add({type="flow", name="flow_content", direction="vertical"})
 
     -- toggle button section
     local toggle_content = flow_content.add({type="flow", name="toggle_content", direction="horizontal", align="center"})
-    toggle_content.add({type="label", name="label_toggle", caption={"gui-flow-config.toggle"}, style="heading_2_label"})
+    toggle_content.add({type="label", name="label_toggle", caption={"fc-gui.toggle"}, style="heading_2_label"})
     local toggle_button = toggle_content.add({type="sprite-button", name="toggle_button", sprite="fc-toggle-locked", style="button"})
     toggle_button.enabled = false
 
     flow_content.add({type="line", name="line", style="control_behavior_window_line"})
 
-    flow_content.add({type="label", name="label_flow", caption={"gui-flow-config.directions"}, style="heading_2_label"})
+    flow_content.add({type="label", name="label_flow", caption={"fc-gui.directions"}, style="heading_2_label"})
     
     local table_direction = flow_content.add({type="table", name="table_direction", column_count=3})
     table_direction.style.horizontal_spacing = 1
@@ -388,36 +412,34 @@ function gui.create_all()
 end
 
 function gui.update_toggle_button(states, button)
-    local can_close = (states.num_open > 0 and states.num_flow >= 2)
-    local can_open = (states.num_close > 0)
-    if can_close then
+    if pipe_utils.can_lock(states) then
         button.sprite = "fc-toggle-close"
-        button.caption={"gui-flow-config.close"}
+        button.caption={"fc-gui.close"}
         button.enabled = true
-    elseif can_open then
+    elseif pipe_utils.can_unlock(states) then
         button.sprite = "fc-toggle-open"
-        button.caption={"gui-flow-config.open"}
+        button.caption={"fc-gui.open"}
         button.enabled = true
     else
         button.sprite = "fc-toggle-locked"
-        button.caption={"gui-flow-config.locked"}
+        button.caption={"fc-gui.locked"}
         button.enabled = false
     end
 end
 
-function gui.update_direction_button(states, button, direction)
+function gui.update_direction_button(states, button, dir)
     local can_close_any = (states.num_open + states.num_flow > 2)
-    if states[direction] == "flow" then
-        button.sprite = "fc-flow-"..direction
+    if states[dir] == "flow" then
+        button.sprite = "fc-flow-"..dir
         button.enabled = can_close_any
-    elseif states[direction] == "open" then
-        button.sprite = "fc-open-"..direction
+    elseif states[dir] == "open" then
+        button.sprite = "fc-open-"..dir
         button.enabled = can_close_any
-    elseif states[direction] == "close" then
-        button.sprite = "fc-close-"..direction
+    elseif states[dir] == "close" then
+        button.sprite = "fc-close-"..dir
         button.enabled = true
-    elseif states[direction] == "block" then
-        button.sprite = "fc-block-"..direction
+    elseif states[dir] == "block" then
+        button.sprite = "fc-block-"..dir
         button.enabled = false
     else
         button.sprite = nil
@@ -478,38 +500,22 @@ end
 
 function gui.on_button_toggle(player, event)
     local pipe = player.opened
-    local states = pipe_utils.get_direction_states(pipe)
-    local toggle = false
+    local newpipe = nil
     if event.element.sprite == "fc-toggle-open" then
-        -- open pipes
-        for dir,_ in pairs(GFC.directions) do
-            if states[dir] == "close" then
-                states.directions[dir] = true
-            end
-        end
-        toggle = true
+        newpipe = pipe_utils.try_unlock_pipe(player, pipe)
     elseif event.element.sprite == "fc-toggle-close" then
-        -- close pipes
-        for dir,_ in pairs(GFC.directions) do
-            if states[dir] == "open" then
-                states.directions[dir] = nil
-            end
-        end
-        toggle = true
+        newpipe = pipe_utils.try_lock_pipe(player, pipe)
     end
-    if toggle then
-        local newpipe = pipe_utils.replace_pipe(player, pipe, states.directions)
-        if newpipe ~= nil then
-            player.opened = newpipe
-        end
+    if newpipe ~= nil then
+        player.opened = newpipe
     end
     gui.update_all()
 end
 
 function gui.on_button_direction(player, event)
     local pipe = player.opened
-    local direction = gui.get_button_direction(event.element)
-    local newpipe = pipe_utils.toggle_direction(player, pipe, direction)
+    local dir = gui.get_button_direction(event.element)
+    local newpipe = pipe_utils.toggle_direction(player, pipe, dir)
     if newpipe ~= nil then
         player.opened = newpipe
         gui.update_all()
@@ -542,6 +548,11 @@ local function on_player_created(event)
 	gui.create(player)
 end
 
+script.on_init(on_init)
+script.on_configuration_changed(on_configuration_changed)
+script.on_event(defines.events.on_gui_opened, on_gui_opened)
+script.on_event(defines.events.on_player_created, on_player_created)
+
 local function on_gui_click(event)
     local player = game.players[event.player_index]
     local gui_instance = player.gui.relative.flow_config.frame_content.flow_content
@@ -552,27 +563,79 @@ local function on_gui_click(event)
     end
 end 
 
+script.on_event(defines.events.on_gui_click, on_gui_click)
+
+-- special events ---------------------------------------------------------------------------------
+
 local function on_entity_settings_pasted(event)
+    -- novice Factorio modder here: assuming this can only happen to one entity at a time, otherwise this may cause some weird flow states :)
     local player = game.players[event.player_index]
-    local directions = pipe_utils.get_direction_states(event.source)
-    if pipe_utils.check_direction_limits(event.destination, directions) then
-        local newpipe = pipe_utils.replace_pipe(player, event.destination, directions)
-        if newpipe ~= nil then
-            gui.update_all()
+    local instates = pipe_utils.get_direction_states(event.source)
+    local pipe = event.destination
+    local states = pipe_utils.get_direction_states(pipe)
+    -- combine state counts, since we only care about opening and closing in the end
+    local num_open = states.num_open + states.num_flow
+    local do_paste = false
+    
+    for dir,_ in pairs(GFC.directions) do
+        if instates.directions[dir] and states.directions[dir] ~= true then
+            if states[dir] ~= "block" then
+                states.directions[dir] = true
+                num_open = num_open + 1
+                do_paste = true
+            else
+                -- don't open pipe flow if it's blocked
+                player.create_local_flying_text{text={"fc-tools.cant-open-blocked"}, create_at_cursor=true}
+                player.play_sound{path="utility/cannot_build"}
+                return
+            end
+        end
+        if instates.directions[dir] ~= true and states.directions[dir] then
+            states.directions[dir] = nil
+            num_open = num_open - 1
+            do_paste = true
+        end
+    end
+    
+    -- don't put the pipe into an invalid state (should not be possible anymore)
+    if num_open < 2 then
+        player.play_sound{path="utility/cannot_build"}
+        return
+    end
+    
+    if do_paste then
+        local was_opened = (player.opened == pipe)
+        local newpipe = pipe_utils.replace_pipe(player, pipe, states.directions)
+        if was_opened and newpipe ~= nil then
+            player.opened = newpipe
+        end
+        gui.update_all()
+    end
+end
+
+script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
+
+local function on_player_selected_area(event)
+    if event.item ~= "fc-flow-key-tool" then return end
+    local player = game.players[event.player_index]
+    local is_locking = (event.name == defines.events.on_player_selected_area)
+    if is_locking then
+        for _,entity in pairs(event.entities) do
+            if pipe_utils.is_pipe(entity) then
+                pipe_utils.try_lock_pipe(player, entity)
+            end
+        end
+    else
+        for _,entity in pairs(event.entities) do
+            if pipe_utils.is_pipe(entity) then
+                -- check fluid compatibility so we're not causing half-blocked half-open connections
+                pipe_utils.try_unlock_pipe(player, entity, true)
+            end
         end
     end
 end
 
-script.on_init(on_init)
-script.on_configuration_changed(on_configuration_changed)
-script.on_event(defines.events.on_gui_opened, on_gui_opened)
-script.on_event(defines.events.on_player_created, on_player_created)
-
-script.on_event(defines.events.on_gui_click, on_gui_click)
-script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
-
--- hotkey events ----------------------------------------------------------------------------------
-
-
+script.on_event(defines.events.on_player_selected_area, on_player_selected_area)
+script.on_event(defines.events.on_player_alt_selected_area, on_player_selected_area)
 
 ---------------------------------------------------------------------------------------------------
