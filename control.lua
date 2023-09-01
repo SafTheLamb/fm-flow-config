@@ -50,8 +50,16 @@ function pipe_utils.get_prototype(pipe)
     return pipe.prototype
 end
 
+function pipe_utils.get_pipe_info(pipename)
+    if pipe_map[pipename] ~= nil then
+        return pipe_map[pipename]
+    end
+    return nil
+end
+
 function pipe_utils.is_pipe(entity)
-    return entity and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
+    return entity and (pipe_utils.get_pipe_info(entity.name) ~= nil or (entity.type == "entity-ghost" and pipe_utils.get_pipe_info(entity.ghost_name) ~= nil))
+    --return entity and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
 end
 
 function pipe_utils.is_pipe_to_ground(entity)
@@ -135,13 +143,6 @@ function pipe_utils.is_flowing(pipe, dir)
     return false
 end
 
-function pipe_utils.get_pipe_info(pipename)
-    if pipe_map[pipename] ~= nil then
-        return pipe_map[pipename]
-    end
-    return {base="pipe"}
-end
-
 function pipe_utils.is_open(pipe, dir)
     -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
     local pipeinfo = pipe_utils.get_pipe_info(pipe.name)
@@ -196,12 +197,12 @@ function pipe_utils.is_blocked(pipe, dir, ignore_close)
     if #others > 0 then
         for _,other in pairs(others) do
             -- if the entity is a pipe and it's closed in this direction, we don't have to be blocked
-            if other.type == "pipe" and ignore_close ~= true then
+            if pipe_utils.is_pipe(other.name) and ignore_close ~= true then
                 if pipe_utils.is_closed(other, pipe_utils.get_opposite(dir)) then
                     return false
                 end
             -- if the entity is a ground pipe and it's not facing this direction, we don't have to be blocked
-            elseif other.type == "pipe-to-ground" then
+            elseif pipe_utils.is_pipe_to_ground(other.name) then
                 if dir ~= pipe_utils.get_opposite(defines_to_direction[other.direction]) then
                     return false
                 end
@@ -293,6 +294,7 @@ function pipe_utils.replace_pipe(player, pipe, directions)
         local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.ghost_name).base, directions)
         local newpipe = pipe.surface.create_entity{name="entity-ghost", inner_name=newname, position=pipe.position, force=force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
         if pipe ~= nil then pipe.destroy() end -- TODO: Test me??
+        return newpipe
     else
         -- copy the fluids from the old pipe
         local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.name).base, directions)
@@ -314,8 +316,8 @@ function pipe_utils.replace_pipe(player, pipe, directions)
         for _,fluid in pairs(fluids) do
             newpipe.insert_fluid(fluid)
         end
+        return newpipe
     end
-    return newpipe
 end
 
 function pipe_utils.open_direction(player, pipe, directions, dir)
