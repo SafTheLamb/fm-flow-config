@@ -12,12 +12,18 @@ local function create_junction_entities(basename)
         if copy.localised_name == nil then copy.localised_name = { "entity-name."..basename } end
         copy.fluid_box.pipe_connections = junction.connections
         copy.placeable_by = { item = basename, count = 1 }
+        -- don't allow fast replace, since that allows normal pipes to be fast placed onto special junction pipes, which can easily mix fluids
         copy.fast_replaceable_group = nil
         table.insert(copy.flags, "hidden")
         
         table.insert(all_pipe_entities, copy.name)
         data:extend({copy})
     end
+
+    -- unfortunately, pipes cannot rotate, which is fine!... except for rotating blueprints
+    -- if there was a hook for modifying blueprints when rotated, I could revert to the old pipe setup
+    -- until then, Flow Config pipes are also storage tanks, same as with Flow Control :)
+
     table.insert(all_pipe_entities, basename)
 end
 
@@ -119,96 +125,121 @@ data:extend({
 ---------------------------------------------------------------------------------------------------
 
 data:extend({
-{
-    type = "selection-tool",
-    name = "fc-flow-key-tool",
-    icon = get_icon_path("tool-key"),
-    icon_size = 64, icon_mipmaps = 4,
-    flags = {"only-in-cursor", "hidden", "not-stackable", "spawnable"},
-    subgroup = "tool",
-    order = "fc-k",
-    stack_size = 1,
-    selection_color = {229, 80, 24},
-    alt_selection_color = {255, 210, 73},
-    selection_mode = {"any-entity"},
-    alt_selection_mode = {"any-entity"},
-    entity_type_filters = {"pipe"},
-    alt_entity_type_filters = {"pipe"},
-    selection_cursor_box_type = "not-allowed",
-    alt_selection_cursor_box_type = "entity",
-    open_sound = {filename =  "__base__/sound/item-open.ogg", volume = 1},
-    close_sound = {filename = "__base__/sound/item-close.ogg", volume = 1}
-},
-{
-    type = "custom-input",
-    name = "give-flow-key-tool",
-    key_sequence = "ALT + F",
-    consuming = "game-only",
-    item_to_spawn = "fc-flow-key-tool",
-    action = "spawn-item",
-},
-{
-    type = "shortcut",
-    name = "give-flow-key-tool",
-    order = "fc-k",
-    action = "spawn-item",
-    localised_name = {"fc-tools.flow-key-tool"},
-    associated_control_input = "give-flow-key-tool",
-    item_to_spawn = "fc-flow-key-tool",
-    style = "blue",
-    icon =
     {
-        filename = get_icon_path("tool-key-x32"),
-        priority = "extra-high-no-scale",
-        size = 32,
-        scale = 0.5,
-        mipmap_count = 2,
-        flags = {"gui-icon"}
+        type = "selection-tool",
+        name = "fc-flow-key-tool",
+        icon = get_icon_path("tool-key"),
+        icon_size = 64, icon_mipmaps = 4,
+        flags = {"only-in-cursor", "hidden", "not-stackable", "spawnable"},
+        subgroup = "tool",
+        order = "fc-k",
+        stack_size = 1,
+        selection_color = {229, 80, 24},
+        alt_selection_color = {255, 210, 73},
+        selection_mode = {"any-entity"},
+        alt_selection_mode = {"any-entity"},
+        entity_type_filters = {"pipe"},
+        alt_entity_type_filters = {"pipe"},
+        selection_cursor_box_type = "not-allowed",
+        alt_selection_cursor_box_type = "entity",
+        open_sound = {filename =  "__base__/sound/item-open.ogg", volume = 1},
+        close_sound = {filename = "__base__/sound/item-close.ogg", volume = 1}
     },
-    small_icon =
     {
-        filename = get_icon_path("tool-key-x24"),
-        priority = "extra-high-no-scale",
-        size = 24,
-        scale = 0.5,
-        mipmap_count = 2,
-        flags = {"gui-icon"}
+        type = "custom-input",
+        name = "give-flow-key-tool",
+        localised_name = {"fc-tools.flow-key-tool"},
+        key_sequence = "ALT + F",
+        consuming = "game-only",
+        item_to_spawn = "fc-flow-key-tool",
+        action = "spawn-item",
     },
-    disabled_small_icon =
     {
-        filename = get_icon_path("tool-key-x24"),
-        priority = "extra-high-no-scale",
-        size = 24,
-        scale = 0.5,
-        mipmap_count = 2,
-        flags = {"gui-icon"}
+        type = "shortcut",
+        name = "give-flow-key-tool",
+        order = "fc-k",
+        action = "spawn-item",
+        localised_name = {"fc-tools.flow-key-tool"},
+        associated_control_input = "give-flow-key-tool",
+        item_to_spawn = "fc-flow-key-tool",
+        style = "blue",
+        icon =
+        {
+            filename = get_icon_path("tool-key-x32"),
+            priority = "extra-high-no-scale",
+            size = 32,
+            scale = 0.5,
+            mipmap_count = 2,
+            flags = {"gui-icon"}
+        },
+        small_icon =
+        {
+            filename = get_icon_path("tool-key-x24"),
+            priority = "extra-high-no-scale",
+            size = 24,
+            scale = 0.5,
+            mipmap_count = 2,
+            flags = {"gui-icon"}
+        },
+        disabled_small_icon =
+        {
+            filename = get_icon_path("tool-key-x24"),
+            priority = "extra-high-no-scale",
+            size = 24,
+            scale = 0.5,
+            mipmap_count = 2,
+            flags = {"gui-icon"}
+        },
     },
-},
 })
 
----------------------------------------------------------------------------------------------------
+-- rotate hook ------------------------------------------------------------------------------------
+
+-- local hack_blueprint = util.table.deepcopy(data.raw.blueprint["blueprint"])
+-- hack_blueprint.name = "fc-hack-blueprint"
+-- table.insert(hack_blueprint.flags, "hidden")
+-- table.insert(hack_blueprint.flags, "only-in-cursor")
+-- --table.insert(hack_blueprint.flags, "only-in-cursor")
+-- data:extend({hack_blueprint})
 
 -- data:extend({
 --     {
 --         type = "custom-input",
---         name = "fc-toggle",
---         key_sequence = "SHIFT + F",
---         consuming = "none",
---         order = "0",
+--         name = "fc-rotate",
+--         --linked_game_control = "rotate",
+--         key_sequence = "Y", -- DEBUG TO COMPARE AGAINST VANILLA ROTATE
+--         consuming = "game-only",
+--         action = "lua",
 --     },
 --     {
 --         type = "custom-input",
---         name = "fc-lock",
---         key_sequence = "",
---         consuming = "none",
---         order = "0",
+--         name = "fc-reverse-rotate",
+--         --linked_game_control = "reverse-rotate",
+--         key_sequence = "SHIFT + Y",
+--         consuming = "game-only",
+--         action = "lua",
 --     },
 --     {
 --         type = "custom-input",
---         name = "fc-unlock",
+--         name = "fc-rotate-180",
+--         localised_name = {"fc-tools.rotate-180"},
+--         key_sequence = "CONTROL + R",
+--         consuming = "game-only",
+--         action = "lua",
+--     },
+--     {
+--         type = "custom-input",
+--         name = "fc-flip-horizontal",
+--         linked_game_control = "flip-blueprint-horizontal",
 --         key_sequence = "",
---         consuming = "none",
---         order = "0",
+--         action = "lua",
+--     },
+--     {
+--         type = "custom-input",
+--         name = "fc-flip-vertical",
+--         linked_game_control = "flip-blueprint-vertical",
+--         key_sequence = "",
+--         action = "lua",
 --     },
 -- })
 

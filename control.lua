@@ -12,11 +12,11 @@ if script.active_mods["IndustrialRevolution3"] then
 end
 
 local pipe_map = {}
-for _,basename in pairs(base_pipe_names) do
-    for juncname,_ in pairs(GFC.junctions) do
-        pipe_map[basename.."-"..juncname] = {base=basename, junction=juncname}
+for _,base in pairs(base_pipe_names) do
+    for junc,_ in pairs(GFC.junctions) do
+        pipe_map[base.."-"..junc] = {basename=base, juncname=junc}
     end
-    pipe_map[basename] = {base=basename, junction=nil}
+    pipe_map[base] = {basename=base, juncname=nil}
 end
 
 -- math utils -------------------------------------------------------------------------------------
@@ -145,9 +145,9 @@ end
 
 function pipe_utils.is_open(pipe, dir)
     -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
-    local pipeinfo = pipe_utils.get_pipe_info(pipe.name)
-    if pipeinfo.junction ~= nil then
-        local junction = GFC.junctions[pipeinfo.junction]
+    local info = pipe_utils.get_pipe_info(pipe.name)
+    if info.juncname ~= nil then
+        local junction = GFC.junctions[info.juncname]
         if junction.directions[dir] ~= nil then
             return true
         end
@@ -161,9 +161,9 @@ end
 
 function pipe_utils.is_closed(pipe, dir)
     -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
-    local pipeinfo = pipe_utils.get_pipe_info(pipe.name)
-    if pipeinfo.junction ~= nil then
-        local junction = GFC.junctions[pipeinfo.junction]
+    local info = pipe_utils.get_pipe_info(pipe.name)
+    if info.juncname ~= nil then
+        local junction = GFC.junctions[info.juncname]
         if junction.directions[dir] == nil then
             return true
         end
@@ -278,26 +278,34 @@ end
 
 ---------------------------------------------------------------------------------------------------
 
-function pipe_utils.construct_pipename(basename, directions)
-    local suffix = ""
-    if (directions["north"]) then suffix = suffix.."n" end
-    if (directions["east"]) then suffix = suffix.."e" end
-    if (directions["south"]) then suffix = suffix.."s" end
-    if (directions["west"]) then suffix = suffix.."w" end
-    if suffix == "nesw" then return basename end
-    return basename.."-"..suffix
+function pipe_utils.get_juncname(directions)
+    local juncname = ""
+    if (directions["north"]) then juncname = juncname.."n" end
+    if (directions["east"]) then juncname = juncname.."e" end
+    if (directions["south"]) then juncname = juncname.."s" end
+    if (directions["west"]) then juncname = juncname.."w" end
+    if juncname == "nesw" then return nil end
+    return juncname
+end
+
+function pipe_utils.construct_pipename(basename, juncname)
+    if juncname ~= nil then
+        return basename.."-"..juncname
+    else
+        return basename
+    end
 end
 
 function pipe_utils.replace_pipe(player, pipe, directions)
     local force = player ~= nil and player.force or pipe.force
     if pipe.type == "entity-ghost" then
-        local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.ghost_name).base, directions)
+        local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.ghost_name).basename, pipe_utils.get_juncname(directions))
         local newpipe = pipe.surface.create_entity{name="entity-ghost", inner_name=newname, position=pipe.position, force=force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
         if pipe ~= nil then pipe.destroy() end -- TODO: Test me??
         return newpipe
     else
         -- copy the fluids from the old pipe
-        local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.name).base, directions)
+        local newname = pipe_utils.construct_pipename(pipe_utils.get_pipe_info(pipe.name).basename, pipe_utils.get_juncname(directions))
         local fluids = {}
         if #pipe.fluidbox > 0 then
             for i=1,#pipe.fluidbox do
@@ -385,6 +393,47 @@ function pipe_utils.try_unlock_pipe(player, pipe, check_fluid_compatibility)
         return pipe_utils.replace_pipe(player, pipe, states.directions)
     end
     return nil
+end
+
+local clockwise_map = {["north"]="east", ["east"]="south", ["south"]="west", ["west"]="north"}
+local counterclockwise_map = {["north"]="west", ["east"]="north", ["south"]="east", ["west"]="south"}
+local full180_map = {["north"]="south", ["east"]="west", ["south"]="north", ["west"]="east"}
+
+function pipe_utils.get_rotated_directions(in_directions, clockwise, full180)
+    local rotate_map = (clockwise and clockwise_map) or (full180 and full180_map) or counterclockwise_map
+
+    local directions = {}
+    for dir,_ in pairs(GFC.directions) do
+        if in_directions[dir] then
+            directions[rotate_map[dir]] = true
+        end
+    end
+
+    return directions
+end
+
+function pipe_utils.rotate_pipe(player, pipe, clockwise, full180)
+    -- TODO: add a setting for whether to clear fluid from a pipe to allow rotating more often (e.g. swapping between two different fluid systems)
+end
+
+local fliphorz_map = {["east"]="west", ["west"]="east"}
+local flipvert_map = {["north"]="south", ["south"]="north"}
+
+function pipe_utils.get_flipped_directions(in_directions, horizontal)
+    local flip_map = horizontal and fliphorz_map or flipvert_map
+
+    local directions = {}
+    for dir,_ in pairs(GFC.directions) do
+        if in_directions[dir] then
+            directions[flip_map[dir]] = true
+        end
+    end
+
+    return directions
+end
+
+function pipe_utils.flip_pipe(player, pipe, horizontal)
+
 end
 
 -- GUI --------------------------------------------------------------------------------------------
@@ -556,11 +605,34 @@ end
 
 -- GUI events -------------------------------------------------------------------------------------
 
+local function setup_blueprint_config()
+    if script.active_mods["BPConfig"] then
+        for _,base in pairs(base_pipe_names) do
+            remote.call("BPConfig", "add_entity_rotate_mapping",
+                {[base.."-ns"]=base.."-ew", [base.."-ew"]=base.."-ns"})
+            remote.call("BPConfig", "add_entity_rotate_mapping",
+                {[base.."-ne"]=base.."-es", [base.."-es"]=base.."-sw", [base.."-sw"]=base.."-nw", [base.."-nw"]=base.."-ne"})
+            remote.call("BPConfig", "add_entity_rotate_mapping",
+                {[base.."-nes"]=base.."-esw", [base.."-esw"]=base.."-nsw", [base.."-nsw"]=base.."-new", [base.."-new"]=base.."-nes"})
+            remote.call("BPConfig", "add_entity_flip_h_mapping", base.."-ne", base.."-nw")
+            remote.call("BPConfig", "add_entity_flip_h_mapping", base.."-es", base.."-sw")
+            remote.call("BPConfig", "add_entity_flip_h_mapping", base.."-nes", base.."-nsw")
+            remote.call("BPConfig", "add_entity_flip_v_mapping", base.."-ne", base.."-es")
+            remote.call("BPConfig", "add_entity_flip_v_mapping", base.."-nw", base.."-sw")
+            remote.call("BPConfig", "add_entity_flip_v_mapping", base.."-new", base.."-esw")
+        end
+    end
+end
+
 local function on_init()
+    log("FlowConfig::on_init")
+    setup_blueprint_config()
     gui.create_all()
 end
 
 local function on_configuration_changed(cfg_changed_data)
+    log("FlowConfig::on_configuration_changed")
+    setup_blueprint_config()
     gui.create_all()
     gui.update_all()
 end
@@ -670,5 +742,90 @@ end
 
 script.on_event(defines.events.on_player_selected_area, on_player_selected_area)
 script.on_event(defines.events.on_player_alt_selected_area, on_player_selected_area)
+
+-- rotate hook ------------------------------------------------------------------------------------
+
+-- p = point to transform
+-- c = pivot center
+-- 
+-- local function transform(position, pivot, matrix_x, matrix_y)
+--     local vector = position - pivot
+--     return {x = vector.x * matrix_x.x + vector.y * matrix_x.y, y = vector.x * matrix_y.x + vector.y * matrix_y.y}
+-- end
+
+
+-- TODO: Change this to transform
+-- local function on_rotate(event)
+--     local player = game.players[event.player_index]
+
+--     if player.cursor_stack_temporary then
+--         game.print("cursor stack is temp!")
+--     end
+
+--     -- if player.cursor_stack ~= nil then
+--     --     if player.cursor_stack.get_blueprint_entities() ~= nil then
+--     --         game.print("cursor stack has entities!")
+--     --     end
+--     -- end
+
+--     local clockwise = (event.input_name == "fc-rotate")
+--     local full180 = (event.input_name == "fc-rotate-180")
+    
+--     if player.is_cursor_blueprint() then
+--         -- local entities = player.get_blueprint_entities()
+--         local entities = player.cursor_stack.get_blueprint_entities()
+--         for _,entity in pairs(entities) do
+--             if pipe_utils.is_pipe(entity) then
+--                 local info = pipe_utils.get_pipe_info(entity.name)
+--                 -- don't need to rotate base pipes
+--                 if info.juncname ~= nil then
+--                     local directions = pipe_utils.get_rotated_directions(GFC.junctions[info.juncname].directions, clockwise, full180)
+--                     entity.name = pipe_utils.construct_pipename(info.basename, pipe_utils.get_juncname(directions))
+--                 end
+--             end
+--         end
+--         player.cursor_stack.set_blueprint_entities(entities)
+        
+--         -- -- since we're overriding the blueprint, we have to transform the blueprint ourselves, since the game gets confused it's not the same thing anymore :)
+--         -- log("before:")
+--         -- log(serpent.block(entities))
+
+        
+--         -- -- for _,entity in pairs(entities) do
+--         -- --     entity.position = transform_position()
+--         -- --     if entity.direction ~= nil then entity.direction = (entity.direction + 2) % 8 end
+--         -- -- end
+
+--         -- log("after:")
+--         -- log(serpent.block(entities))
+
+--         -- -- create an inventory, give it the hack blueprint item, set its entities, player.cursor_stack.set_stack()
+--         -- local hack_inventory = game.create_inventory(1)
+--         -- hack_inventory.insert({name="fc-hack-blueprint"})
+--         -- local hack_blueprint = hack_inventory.find_item_stack("fc-hack-blueprint")
+--         -- hack_blueprint.set_blueprint_entities(entities)
+--         -- if player.cursor_stack ~= nil then
+--         --     player.cursor_stack.set_stack(hack_blueprint)
+--         -- end
+
+--         --hack_inventory.destroy()
+--     end
+-- end
+
+-- local function on_transform(event)
+--     local player = game.players[event.player_index]
+--     -- TODO: merge on_rotate into here
+--     if player.cursor_stack ~= nil then
+--         if player.cursor_stack.get_blueprint_entities() ~= nil then
+--             game.print("cursor stack has entities!")
+--         end
+--     end
+-- end
+
+--script.on_event("fc-rotate", on_rotate)
+--script.on_event("fc-reverse-rotate", on_transform)
+-- script.on_event("fc-rotate-180", on_transform)
+-- script.on_event("fc-flip-horizontal", on_transform)
+-- script.on_event("fc-flip-vertical", on_transform)
 
 ---------------------------------------------------------------------------------------------------
