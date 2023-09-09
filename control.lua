@@ -606,20 +606,20 @@ end
 -- GUI events -------------------------------------------------------------------------------------
 
 local function setup_blueprint_config()
-    if script.active_mods["BPConfig"] then
+    if script.active_mods["blueprint-config"] then
         for _,base in pairs(base_pipe_names) do
-            remote.call("BPConfig", "add_entity_rotate_mapping",
+            remote.call("blueprint-config", "add_entity_rotate_mapping",
                 {[base.."-ns"]=base.."-ew", [base.."-ew"]=base.."-ns"})
-            remote.call("BPConfig", "add_entity_rotate_mapping",
+            remote.call("blueprint-config", "add_entity_rotate_mapping",
                 {[base.."-ne"]=base.."-es", [base.."-es"]=base.."-sw", [base.."-sw"]=base.."-nw", [base.."-nw"]=base.."-ne"})
-            remote.call("BPConfig", "add_entity_rotate_mapping",
+            remote.call("blueprint-config", "add_entity_rotate_mapping",
                 {[base.."-nes"]=base.."-esw", [base.."-esw"]=base.."-nsw", [base.."-nsw"]=base.."-new", [base.."-new"]=base.."-nes"})
-            remote.call("BPConfig", "add_entity_flip_h_mapping", base.."-ne", base.."-nw")
-            remote.call("BPConfig", "add_entity_flip_h_mapping", base.."-es", base.."-sw")
-            remote.call("BPConfig", "add_entity_flip_h_mapping", base.."-nes", base.."-nsw")
-            remote.call("BPConfig", "add_entity_flip_v_mapping", base.."-ne", base.."-es")
-            remote.call("BPConfig", "add_entity_flip_v_mapping", base.."-nw", base.."-sw")
-            remote.call("BPConfig", "add_entity_flip_v_mapping", base.."-new", base.."-esw")
+            remote.call("blueprint-config", "add_entity_flip_h_mapping", base.."-ne", base.."-nw")
+            remote.call("blueprint-config", "add_entity_flip_h_mapping", base.."-es", base.."-sw")
+            remote.call("blueprint-config", "add_entity_flip_h_mapping", base.."-nes", base.."-nsw")
+            remote.call("blueprint-config", "add_entity_flip_v_mapping", base.."-ne", base.."-es")
+            remote.call("blueprint-config", "add_entity_flip_v_mapping", base.."-nw", base.."-sw")
+            remote.call("blueprint-config", "add_entity_flip_v_mapping", base.."-new", base.."-esw")
         end
     end
 end
@@ -672,6 +672,9 @@ script.on_event(defines.events.on_gui_click, on_gui_click)
 -- special events ---------------------------------------------------------------------------------
 
 local function on_entity_settings_pasted(event)
+    if not pipe_utils.is_pipe(event.source) or not pipe_utils.is_pipe(event.destination) then
+        return
+    end
     -- novice Factorio modder here: assuming this can only happen to one entity at a time, otherwise this may cause some weird flow states :)
     local player = game.players[event.player_index]
     local instates = pipe_utils.get_direction_states(event.source)
