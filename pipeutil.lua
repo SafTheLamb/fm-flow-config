@@ -1,6 +1,14 @@
 local pipeutil = {}
 
-pipeutil.reverse_direction =
+pipeutil.directions =
+{
+  north = defines.direction.north,
+  east = defines.direction.east,
+  south = defines.direction.south,
+  west = defines.direction.west
+}
+
+pipeutil.opposite =
 {
   [defines.direction.north] = defines.direction.south,
   [defines.direction.east]  = defines.direction.west,

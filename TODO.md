@@ -1,7 +1,6 @@
-- Change junction generation to auto-populate based on all pipe types (so mods don't need to be manually supported)
 - Fix Close not taking precedence over Blocked if both are Closed (why?)
-- Refactor file system to match new standards... replace code/ with control/ for starters
+- Fix base_pipe_map in control.lua to auto-populate
+- Change requires in control.lua
 - Rename pipe_utils to pipeutil
-- Refactor globals.lua (?)
 
 - Better organize control code
