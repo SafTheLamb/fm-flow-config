@@ -20,10 +20,6 @@ local function create_junction_entities(basename)
         data:extend({copy})
     end
 
-    -- unfortunately, pipes cannot rotate, which is fine!... except for rotating blueprints
-    -- if there was a hook for modifying blueprints when rotated, I could revert to the old pipe setup
-    -- until then, Flow Config pipes are also storage tanks, same as with Flow Control :)
-
     table.insert(all_pipe_entities, basename)
 end
 
