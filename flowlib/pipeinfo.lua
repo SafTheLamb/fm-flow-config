@@ -1,6 +1,6 @@
-local pipeutil = {}
+local pipeinfo = {}
 
-pipeutil.directions =
+pipeinfo.directions =
 {
   north = {x=0, y=-1},
   east  = {x=1, y=0},
@@ -8,7 +8,7 @@ pipeutil.directions =
   west  = {x=-1, y=0}
 }
 
-pipeutil.defines_to_direction =
+pipeinfo.defines_to_direction =
 {
   [defines.direction.north] = "north",
   [defines.direction.east] = "east",
@@ -16,7 +16,7 @@ pipeutil.defines_to_direction =
   [defines.direction.west] = "west"
 }
 
-pipeutil.opposite =
+pipeinfo.opposite =
 {
   ["south"] = "south",
   ["east"]  = "west",
@@ -24,7 +24,7 @@ pipeutil.opposite =
   ["west"]  = "east"
 }
 
-pipeutil.junctions =
+pipeinfo.junctions =
 {
   -- straight ---------------------------------
   ns =
@@ -117,4 +117,4 @@ pipeutil.junctions =
   },
 }
 
-return pipeutil
+return pipeinfo

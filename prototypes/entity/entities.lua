@@ -1,10 +1,10 @@
-local pipeutil = require("pipeutil")
+local pipeinfo = require("flowlib.pipeinfo")
 
 -- add to local lists to avoid going recursive!
 local junction_entities = {}
 local all_pipe_names = {}
 for _,entity in pairs(data.raw.pipe) do
-  for juncname,junction in pairs(pipeutil.junctions) do
+  for juncname,junction in pairs(pipeinfo.junctions) do
     local copy = util.copy(entity)
     copy.name = entity.name.."-fc-"..juncname
     if copy.localised_name == nil then copy.localised_name = { "entity-name."..entity.name } end

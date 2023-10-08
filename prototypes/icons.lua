@@ -1,6 +1,6 @@
-local pipeutil = require("pipeutil")
+local pipeinfo = require("flowlib.pipeinfo")
 
-for dir,_ in pairs(pipeutil.directions) do
+for dir,_ in pairs(pipeinfo.directions) do
   data:extend(
   {
     {
