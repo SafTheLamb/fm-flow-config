@@ -2,18 +2,26 @@ local pipeutil = {}
 
 pipeutil.directions =
 {
-  north = defines.direction.north,
-  east = defines.direction.east,
-  south = defines.direction.south,
-  west = defines.direction.west
+  north = {x=0, y=-1},
+  east  = {x=1, y=0},
+  south = {x=0, y=1},
+  west  = {x=-1, y=0}
+}
+
+pipeutil.defines_to_direction =
+{
+  [defines.direction.north] = "north",
+  [defines.direction.east] = "east",
+  [defines.direction.south] = "south",
+  [defines.direction.west] = "west"
 }
 
 pipeutil.opposite =
 {
-  [defines.direction.north] = defines.direction.south,
-  [defines.direction.east]  = defines.direction.west,
-  [defines.direction.south] = defines.direction.north,
-  [defines.direction.west]  = defines.direction.east
+  ["south"] = "south",
+  ["east"]  = "west",
+  ["south"] = "south",
+  ["west"]  = "east"
 }
 
 pipeutil.junctions =
@@ -21,90 +29,90 @@ pipeutil.junctions =
   -- straight ---------------------------------
   ns =
   {
-    directions = {[defines.direction.north]=true, [defines.direction.south]=true},
+    directions = {["north"]=true, ["south"]=true},
     connections =
     {
-      {position = {0, -1}},
-      {position = {0,  1}}
+      {position = {x=0, y=-1}},
+      {position = {x=0, y=1}}
     }
   },
   ew = {
-    directions = {[defines.direction.east]=true, [defines.direction.west]=true},
+    directions = {["east"]=true, ["west"]=true},
     connections =
     {
-      {position = { 1,  0}},
-      {position = {-1,  0}}
+      {position = {x=1, y=0}},
+      {position = {x=-1, y=0}}
     }
   },
   
   -- elbow ------------------------------------
   ne = {
-    directions = {[defines.direction.north]=true, [defines.direction.east]=true},
+    directions = {["north"]=true, ["east"]=true},
     connections =
     {
-      {position = { 0, -1}},
-      {position = { 1,  0}}
+      {position = {x=0, y=-1}},
+      {position = {x=1, y=0}}
     }
   },
   es = {
-    directions = {[defines.direction.east]=true, [defines.direction.south]=true},
+    directions = {["east"]=true, ["south"]=true},
     connections =
     {
-      {position = { 1,  0}},
-      {position = { 0,  1}}
+      {position = {x=1, y=0}},
+      {position = {x=0, y=1}}
     }
   },
   sw = {
-    directions = {[defines.direction.south]=true, [defines.direction.west]=true},
+    directions = {["south"]=true, ["west"]=true},
     connections =
     {
-      {position = { 0,  1}},
-      {position = {-1,  0}},
+      {position = {x=0, y=1}},
+      {position = {x=-1, y=0}},
     }
   },
   nw = {
-    directions = {[defines.direction.north]=true, [defines.direction.west]=true},
+    directions = {["north"]=true, ["west"]=true},
     connections =
     {
-      {position = { 0, -1}},
-      {position = {-1,  0}},
+      {position = {x=0, y=-1}},
+      {position = {x=-1, y=0}},
     }
   },
 
   -- T-junction -------------------------------
   nes = {
-    directions = {[defines.direction.north]=true, [defines.direction.east]=true, [defines.direction.south]=true},
+    directions = {["north"]=true, ["east"]=true, ["south"]=true},
     connections =
     {
-      {position = { 0, -1}},
-      {position = { 1,  0}},
-      {position = { 0,  1}}
+      {position = {x=0, y=-1}},
+      {position = {x=1, y=0}},
+      {position = {x=0, y=1}}
     }
   },
   esw = {
-    directions = {[defines.direction.east]=true, [defines.direction.south]=true, [defines.direction.west]=true},
+    directions = {["east"]=true, ["south"]=true, ["west"]=true},
     connections = {
-      {position = { 1, 0}},
-      {position = { 0, 1}},
-      {position = {-1, 0}}
+      {position = {x=1, y=0}},
+      {position = {x=0, y=1}},
+      {position = {x=-1, y=0}}
     }
   },
   nsw = {
-    directions = {[defines.direction.north]=true, [defines.direction.south]=true, [defines.direction.west]=true},
+    directions = {["north"]=true, ["south"]=true, ["west"]=true},
     connections =
     {
-      {position = { 0, -1}},
-      {position = { 0,  1}},
-      {position = {-1,  0}}
+      {position = {x=0, y=-1}},
+      {position = {x=0, y=1}},
+      {position = {x=-1, y=0}}
     }
   },
   new = {
-    directions = {[defines.direction.north]=true, [defines.direction.east]=true, [defines.direction.west]=true},
+    directions = {["north"]=true, ["east"]=true, ["west"]=true},
     connections =
     {
-      {position = { 0, -1}},
-      {position = { 1,  0}},
-      {position = {-1,  0}}
+      {position = {x=0, y=-1}},
+      {position = {x=1, y=0}},
+      {position = {x=-1, y=0}}
     }
   },
 }

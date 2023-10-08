@@ -4,10 +4,9 @@ local pipeutil = require("pipeutil")
 local junction_entities = {}
 local all_pipe_names = {}
 for _,entity in pairs(data.raw.pipe) do
-  table.insert(all_pipe_names, entity.name)
   for juncname,junction in pairs(pipeutil.junctions) do
     local copy = util.copy(entity)
-    copy.name = entity.name.."-"..juncname
+    copy.name = entity.name.."-fc-"..juncname
     if copy.localised_name == nil then copy.localised_name = { "entity-name."..entity.name } end
     copy.fluid_box.pipe_connections = junction.connections
     copy.placeable_by = {item = entity.name, count = 1}
@@ -18,6 +17,7 @@ for _,entity in pairs(data.raw.pipe) do
     table.insert(junction_entities, copy)
     table.insert(all_pipe_names, copy.name)
   end
+  table.insert(all_pipe_names, entity.name)
 end
 data:extend(junction_entities)
 
