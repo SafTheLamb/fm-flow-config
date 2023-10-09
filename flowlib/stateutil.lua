@@ -22,6 +22,15 @@ end
 
 local stateutil = {}
 
+function stateutil.is_denied(pipe)
+  for _,prefix in pairs(global.denylist_prefixes) do
+    if util.string_starts_with(pipe.name, prefix) then
+      return true
+    end
+  end
+  return false
+end
+
 function stateutil.get_prototype(pipe)
   if pipe.type == "entity-ghost" then
     return pipe.ghost_prototype
@@ -194,8 +203,12 @@ function stateutil.is_blocked(pipe, dir, check_close)
   return false
 end
 
+function stateutil.get_empty_states()
+  return {directions={}, num_flow=0, num_open=0, num_block=0, num_close=0}
+end
+
 function stateutil.get_direction_states(pipe)
-  local states = {directions={}, num_flow=0, num_open=0, num_block=0, num_close=0}
+  local states = stateutil.get_empty_states()
   for dir,_ in pairs(pipeinfo.directions) do
     -- check flow and open before block and close: they're more true-to-state, even if something weird exists in the pipes
     if stateutil.is_flowing(pipe, dir) then
@@ -222,7 +235,7 @@ function stateutil.get_direction_states(pipe)
 end
 
 function stateutil.get_pipe_to_ground_direction_states(pipe)
-  local states = {directions={}, num_flow=0, num_open=0, num_block=0, num_close=0}
+  local states = stateutil.get_empty_states()
   for dir,_ in pairs(pipeinfo.directions) do
     -- flow state still has higher priority
     if stateutil.is_flowing(pipe, dir) then

@@ -98,10 +98,13 @@ function gui.update_direction_button(states, button, dir)
   end
 end
 
-function gui.update(player, pipe)
+function gui.update_pipe(player, pipe)
   local gui_instance = player.gui.relative.flow_config.frame_content.flow_content
 
-  local states = stateutil.get_direction_states(pipe)
+  local states = stateutil.get_empty_states()
+  if not stateutil.is_denied(pipe) then
+    states = stateutil.get_direction_states(pipe)
+  end
 
   gui.update_toggle_button(states, gui_instance.toggle_content.toggle_button)
   gui.update_direction_button(states, gui_instance.table_direction.children[2], "north")
@@ -119,7 +122,10 @@ end
 function gui.update_pipe_to_ground(player, pipe)
   local gui_instance = player.gui.relative.flow_config.frame_content.flow_content
 
-  local states = stateutil.get_pipe_to_ground_direction_states(pipe)
+  local states = stateutil.get_empty_states()
+  if not stateutil.is_denied(pipe) then
+    states = stateutil.get_pipe_to_ground_direction_states(pipe)
+  end
 
   gui.update_toggle_button(states, gui_instance.toggle_content.toggle_button)
   gui.update_direction_button(states, gui_instance.table_direction.children[2], "north")
@@ -136,8 +142,12 @@ end
 
 function gui.update_all()
   for idx, player in pairs(game.players) do
-    if player.opened and stateutil.is_pipe(player.opened) then
-      gui.update(player, player.opened)
+    if player.opened then
+      if stateutil.is_pipe(player.opened) then
+        gui.update_pipe(player, player.opened)
+      elseif stateutil.is_pipe_to_ground(player.opened) then
+        gui.update_pipe_to_ground(player, player.opened)
+      end
     end
   end
 end
@@ -157,6 +167,8 @@ end
 
 function gui.on_button_toggle(player, event)
   local pipe = player.opened
+  if stateutil.is_denied(pipe) then return end
+
   local newpipe = nil
   if event.element.sprite == "fc-toggle-open" then
     newpipe = flowutil.try_unlock_pipe(player, pipe)
@@ -171,6 +183,8 @@ end
 
 function gui.on_button_direction(player, event)
   local pipe = player.opened
+  if stateutil.is_denied(pipe) then return end
+  
   local dir = gui.get_button_direction(event.element)
   local newpipe = flowutil.toggle_direction(player, pipe, dir)
   if newpipe ~= nil then
@@ -223,15 +237,21 @@ local function create_pipe_map()
   end
 end
 
+local function update_denylist()
+  global.denylist_prefixes = util.split(settings.startup["flow-config-denylist"].value, ',')
+end
+
 local function on_init()
   log("flow-config::on_init")
   create_pipe_map()
+  update_denylist()
   gui.create_all()
 end
 
 local function on_configuration_changed(cfg_changed_data)
   log("flow-config::on_configuration_changed")
   create_pipe_map()
+  update_denylist()
   gui.create_all()
   gui.update_all()
 end
@@ -240,7 +260,7 @@ local function on_gui_opened(event)
 	local player = game.players[event.player_index]
 
 	if stateutil.is_pipe(event.entity) then
-		gui.update(player, event.entity)
+		gui.update_pipe(player, event.entity)
   elseif stateutil.is_pipe_to_ground(event.entity) then
     gui.update_pipe_to_ground(player, event.entity)
 	end
@@ -274,6 +294,9 @@ local function on_entity_settings_pasted(event)
   if not stateutil.is_pipe(event.source) or not stateutil.is_pipe(event.destination) then
     return
   end
+  if stateutil.is_denied(event.source) or stateutil.is_denied(event.destination) then
+    return
+  end
   -- I'm assuming this can only happen to one entity at a time, otherwise this may cause some weird flow states :)
   local player = game.players[event.player_index]
   local instates = stateutil.get_direction_states(event.source)
@@ -283,7 +306,7 @@ local function on_entity_settings_pasted(event)
   local num_open = states.num_open + states.num_flow
   local do_paste = false
   
-  for _,dir in pairs(piputil.directions) do
+  for _,dir in pairs(pipeutil.directions) do
     if instates.directions[dir] and states.directions[dir] ~= true then
       if states[dir] ~= "block" then
         states.directions[dir] = true
@@ -328,13 +351,13 @@ local function on_player_selected_area(event)
   local is_locking = (event.name == defines.events.on_player_selected_area)
   if is_locking then
     for _,entity in pairs(event.entities) do
-      if stateutil.is_pipe(entity) then
+      if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
         flowutil.try_lock_pipe(player, entity)
       end
     end
   else
     for _,entity in pairs(event.entities) do
-      if stateutil.is_pipe(entity) then
+      if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
         -- check fluid compatibility so we're not causing half-blocked half-open connections
         flowutil.try_unlock_pipe(player, entity, true)
       end
