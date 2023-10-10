@@ -97,10 +97,14 @@ function stateutil.is_flowing(pipe, dir)
     for _,connection in pairs(pipe.fluidbox.get_pipe_connections(1)) do
       -- if we have a target, check if the connection position delta matches the direction offset
       if connection.target ~= nil and connection.target_pipe_connection_index ~= nil then
-        local target_connection = connection.target.get_pipe_connections(1)[connection.target_pipe_connection_index]
-        local delta = math2d.position.subtract(target_connection.position, connection.position)
-        if math2d.position.are_codirectional(dirpos, delta) then
-          return true
+        local fluidbox_index = connection.target_fluidbox_index or 1
+        local target_connection = connection.target.get_pipe_connections(fluidbox_index)[connection.target_pipe_connection_index]
+        -- TODO: target_pipe_connection_index MAY be referring to a connection in not the first fluidbox?
+        if target_connection then
+          local delta = math2d.position.subtract(target_connection.position, connection.position)
+          if math2d.position.are_codirectional(dirpos, delta) then
+            return true
+          end
         end
       end
     end

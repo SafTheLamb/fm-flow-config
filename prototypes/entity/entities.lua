@@ -20,8 +20,11 @@ for _,entity in pairs(data.raw.pipe) do
       if copy.localised_name == nil then copy.localised_name = { "entity-name."..entity.name } end
       copy.fluid_box.pipe_connections = junction.connections
       copy.placeable_by = {item = entity.name, count = 1}
-      -- don't allow fast replace, since that allows normal pipes to be fast placed onto special junction pipes, which can easily mix fluids
-      copy.fast_replaceable_group = nil
+      if copy.next_upgrade then
+        copy.next_upgrade = copy.next_upgrade.."-fc-"..juncname
+      end
+      -- Fast Replace isn't desirable, but next_upgrade, used by other mods, needs this set
+      -- copy.fast_replaceable_group = nil
       table.insert(copy.flags, "hidden")
       
       table.insert(junction_entities, copy)
