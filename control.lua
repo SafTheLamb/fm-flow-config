@@ -306,7 +306,7 @@ local function on_entity_settings_pasted(event)
   local num_open = states.num_open + states.num_flow
   local do_paste = false
   
-  for _,dir in pairs(pipeutil.directions) do
+  for dir,_ in pairs(pipeinfo.directions) do
     if instates.directions[dir] and states.directions[dir] ~= true then
       if states[dir] ~= "block" then
         states.directions[dir] = true
