@@ -19,7 +19,7 @@ for _,entity in pairs(data.raw.pipe) do
       copy.name = entity.name.."-fc-"..juncname
       if copy.localised_name == nil then copy.localised_name = { "entity-name."..entity.name } end
       copy.fluid_box.pipe_connections = junction.connections
-      copy.placeable_by = {item = entity.name, count = 1}
+      if not copy.placeable_by then copy.placeable_by = {item = entity.name, count = 1} end
       if copy.next_upgrade then
         copy.next_upgrade = copy.next_upgrade.."-fc-"..juncname
       end
