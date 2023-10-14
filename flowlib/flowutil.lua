@@ -24,35 +24,41 @@ end
 function flowutil.replace_pipe(player, pipe, directions)
   local force = player ~= nil and player.force or pipe.force
   if pipe.type == "entity-ghost" then
-    local newname = flowutil.construct_pipename(stateutil.get_pipe_data(pipe.ghost_name).basename, flowutil.get_juncname(directions))
-    local newpipe = pipe.surface.create_entity{name="entity-ghost", inner_name=newname, position=pipe.position, force=force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
-    if pipe ~= nil then pipe.destroy() end -- TODO: Test me??
-    return newpipe
+    local data = stateutil.get_pipe_data(pipe.ghost_name)
+    if data then
+      local newname = flowutil.construct_pipename(data.basename, flowutil.get_juncname(directions))
+      local newpipe = pipe.surface.create_entity{name="entity-ghost", inner_name=newname, position=pipe.position, force=force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
+      if pipe ~= nil then pipe.destroy() end -- TODO: Test me??
+      return newpipe
+    end
   else
     -- copy the fluids from the old pipe
-    local newname = flowutil.construct_pipename(stateutil.get_pipe_data(pipe.name).basename, flowutil.get_juncname(directions))
-    -- local fluids = {}
-    -- if #pipe.fluidbox > 0 then
-    --   for i=1,#pipe.fluidbox do
-    --     table.insert(fluids, pipe.fluidbox[i])
-    --   end
-    -- end
-    -- local health = pipe.health
-    
-    -- destroy the old pipe first so the new pipe can seamlessly slot into its connections
-    local position = pipe.position
-    local surface = pipe.surface
-    -- pipe.clear_fluid_inside()
-    -- pipe.destroy()
+    local data = stateutil.get_pipe_data(pipe.name)
+    if data then
+      local newname = flowutil.construct_pipename(data.basename, flowutil.get_juncname(directions))
+      -- local fluids = {}
+      -- if #pipe.fluidbox > 0 then
+      --   for i=1,#pipe.fluidbox do
+      --     table.insert(fluids, pipe.fluidbox[i])
+      --   end
+      -- end
+      -- local health = pipe.health
+      
+      -- destroy the old pipe first so the new pipe can seamlessly slot into its connections
+      local position = pipe.position
+      local surface = pipe.surface
+      -- pipe.clear_fluid_inside()
+      -- pipe.destroy()
 
-    -- create the new pipe and destroy the old one
-    -- NOTE:
-    local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
-    -- for _,fluid in pairs(fluids) do
-    --   newpipe.insert_fluid(fluid)
-    --   newpipe.health = health
-    -- end
-    return newpipe
+      -- create the new pipe and destroy the old one
+      -- NOTE:
+      local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
+      -- for _,fluid in pairs(fluids) do
+      --   newpipe.insert_fluid(fluid)
+      --   newpipe.health = health
+      -- end
+      return newpipe
+    end
   end
 end
 

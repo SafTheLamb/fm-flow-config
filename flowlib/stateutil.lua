@@ -135,7 +135,7 @@ end
 function stateutil.is_open(pipe, dir)
   -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
   local data = stateutil.get_pipe_data(pipe.name)
-  if data.juncname ~= nil then
+  if data and data.juncname ~= nil then
     local junction = pipeinfo.junctions[data.juncname]
     if junction.directions[dir] ~= nil then
       return true
@@ -151,7 +151,7 @@ end
 function stateutil.is_closed(pipe, dir)
   -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
   local data = stateutil.get_pipe_data(pipe.name)
-  if data.juncname ~= nil then
+  if data and data.juncname ~= nil then
     local junction = pipeinfo.junctions[data.juncname]
     if junction.directions[dir] == nil then
       return true
