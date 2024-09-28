@@ -18,10 +18,10 @@ pipeinfo.defines_to_direction =
 
 pipeinfo.opposite =
 {
-  ["south"] = "south",
-  ["east"]  = "west",
-  ["south"] = "south",
-  ["west"]  = "east"
+    ["north"] = "south",
+    ["east"]  = "west",
+    ["south"] = "north",
+    ["west"]  = "east"
 }
 
 pipeinfo.junctions =
