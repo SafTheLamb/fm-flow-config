@@ -18,9 +18,9 @@ pipeinfo.defines_to_direction =
 
 pipeinfo.opposite =
 {
-  ["south"] = "south",
+  ["north"] = "south",
   ["east"]  = "west",
-  ["south"] = "south",
+  ["south"] = "north",
   ["west"]  = "east"
 }
 
