@@ -36,28 +36,32 @@ function flowutil.replace_pipe(player, pipe, directions)
     local data = stateutil.get_pipe_data(pipe.name)
     if data then
       local newname = flowutil.construct_pipename(data.basename, flowutil.get_juncname(directions))
-      -- local fluids = {}
-      -- if #pipe.fluidbox > 0 then
-      --   for i=1,#pipe.fluidbox do
-      --     table.insert(fluids, pipe.fluidbox[i])
-      --   end
-      -- end
-      -- local health = pipe.health
-      
-      -- destroy the old pipe first so the new pipe can seamlessly slot into its connections
+
       local position = pipe.position
       local surface = pipe.surface
-      -- pipe.clear_fluid_inside()
-      -- pipe.destroy()
 
-      -- create the new pipe and destroy the old one
-      -- NOTE:
-      local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
-      -- for _,fluid in pairs(fluids) do
-      --   newpipe.insert_fluid(fluid)
-      --   newpipe.health = health
-      -- end
-      return newpipe
+      if player.character == nil then
+        local fluids = {}
+        if #pipe.fluidbox > 0 then
+          for i=1,#pipe.fluidbox do
+            table.insert(fluids, pipe.fluidbox[i])
+          end
+        end
+        local health = pipe.health
+
+        -- destroy the old pipe then create the new one
+        pipe.clear_fluid_inside()
+        pipe.destroy()
+        local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
+        for _,fluid in pairs(fluids) do
+          newpipe.insert_fluid(fluid)
+        end
+        newpipe.health = health
+        return newpipe
+      else
+        local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
+        return newpipe
+      end
     end
   end
 end
