@@ -5,6 +5,6 @@ data:extend(
     type = "string-setting",
     name = "flow-config-denylist",
     setting_type = "startup",
-    default_value = "factory-,underwater-pipe-placer"
+    default_value = "factory-,underwater-pipe-placer,fluidic-"
   }
 })
