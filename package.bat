@@ -1,2 +1,2 @@
 @echo off
-python package.py
+py package.py

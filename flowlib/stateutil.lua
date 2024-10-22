@@ -23,7 +23,7 @@ end
 local stateutil = {}
 
 function stateutil.is_denied(pipe)
-  for _,prefix in pairs(global.denylist_prefixes) do
+  for _,prefix in pairs(storage.denylist_prefixes) do
     if util.string_starts_with(pipe.name, prefix) then
       return true
     end
@@ -39,8 +39,8 @@ function stateutil.get_prototype(pipe)
 end
 
 function stateutil.get_pipe_data(pipename)
-  if global.pipes[pipename] ~= nil then
-    return global.pipes[pipename]
+  if storage.pipes[pipename] ~= nil then
+    return storage.pipes[pipename]
   end
   return nil
 end
@@ -55,7 +55,7 @@ end
 
 function stateutil.are_fluids_compatible(pipe, otherbox, other_index)
   local fluids_a = pipe.get_fluid_contents()
-  local fluids_b = otherbox.get_fluid_system_contents(other_index)
+  local fluids_b = otherbox.get_fluid_segment_contents(other_index)
   if fluids_b == nil then return true end
   -- artificially add a fluid entry of 0 for filtered fluids
   if pipe.fluidbox.get_filter(1) ~= nil then

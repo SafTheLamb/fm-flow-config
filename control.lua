@@ -23,7 +23,7 @@ function gui.create(player)
   local toggle_button = toggle_content.add({type="sprite-button", name="toggle_button", sprite="fc-toggle-locked", style="button"})
   toggle_button.enabled = false
 
-  flow_content.add({type="line", name="line", style="control_behavior_window_line"})
+  flow_content.add({type="line", name="line", style="line"})
 
   flow_content.add({type="label", name="label_flow", caption={"fc-gui.directions"}, style="heading_2_label"})
   
@@ -216,8 +216,8 @@ end
 
 local function create_pipe_map()
   log("Searching prototype list for flow config pipes")
-  global.pipes = {}
-  for _,prototype in pairs(game.get_filtered_entity_prototypes({{filter="type", type="pipe"}})) do
+  storage.pipes = {}
+  for _,prototype in pairs(prototypes.get_entity_filtered({{filter="type", type="pipe"}})) do
     if prototype.type == "pipe" then
       local split = util.split(prototype.name, "-")
       local base = ""
@@ -232,13 +232,13 @@ local function create_pipe_map()
         end
       end
       log("entity="..prototype.name..", basename="..base..", juncname="..(junc or ""))
-      global.pipes[prototype.name]={basename=base, juncname=junc}
+      storage.pipes[prototype.name]={basename=base, juncname=junc}
     end
   end
 end
 
 local function update_denylist()
-  global.denylist_prefixes = util.split(settings.startup["flow-config-denylist"].value, ',')
+  storage.denylist_prefixes = util.split(settings.startup["flow-config-denylist"].value, ',')
 end
 
 local function on_init()
@@ -346,6 +346,8 @@ end
 script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pasted)
 
 local function on_player_selected_area(event)
+  -- TODO: Prioritize only connecting with other pipes selected within the region over other pipes (this lets you easily single out a row or section of pipes from connecting with their neighbors)
+  -- NOTE: Don't ignore non-pipe entity connections: these should remain in consideration.
   if event.item ~= "fc-flow-key-tool" then return end
   local player = game.players[event.player_index]
   local is_locking = (event.name == defines.events.on_player_selected_area)

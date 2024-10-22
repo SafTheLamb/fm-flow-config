@@ -8,14 +8,6 @@ pipeinfo.directions =
   west  = {x=-1, y=0}
 }
 
-pipeinfo.defines_to_direction =
-{
-  [defines.direction.north] = "north",
-  [defines.direction.east] = "east",
-  [defines.direction.south] = "south",
-  [defines.direction.west] = "west"
-}
-
 pipeinfo.opposite =
 {
   ["north"] = "south",
@@ -32,16 +24,16 @@ pipeinfo.junctions =
     directions = {["north"]=true, ["south"]=true},
     connections =
     {
-      {position = {x=0, y=-1}},
-      {position = {x=0, y=1}}
+      {position = {0, 0}, direction=defines.direction.north},
+      {position = {0, 0}, direction=defines.direction.south}
     }
   },
   ew = {
     directions = {["east"]=true, ["west"]=true},
     connections =
     {
-      {position = {x=1, y=0}},
-      {position = {x=-1, y=0}}
+      {position = {0, 0}, direction=defines.direction.east},
+      {position = {0, 0}, direction=defines.direction.west}
     }
   },
   
@@ -50,32 +42,32 @@ pipeinfo.junctions =
     directions = {["north"]=true, ["east"]=true},
     connections =
     {
-      {position = {x=0, y=-1}},
-      {position = {x=1, y=0}}
+      {position = {0, 0}, direction=defines.direction.north},
+      {position = {0, 0}, direction=defines.direction.east}
     }
   },
   es = {
     directions = {["east"]=true, ["south"]=true},
     connections =
     {
-      {position = {x=1, y=0}},
-      {position = {x=0, y=1}}
+      {position = {0, 0}, direction=defines.direction.east},
+      {position = {0, 0}, direction=defines.direction.south}
     }
   },
   sw = {
     directions = {["south"]=true, ["west"]=true},
     connections =
     {
-      {position = {x=0, y=1}},
-      {position = {x=-1, y=0}},
+      {position = {0, 0}, direction=defines.direction.south},
+      {position = {0, 0}, direction=defines.direction.west},
     }
   },
   nw = {
     directions = {["north"]=true, ["west"]=true},
     connections =
     {
-      {position = {x=0, y=-1}},
-      {position = {x=-1, y=0}},
+      {position = {0, 0}, direction=defines.direction.north},
+      {position = {0, 0}, direction=defines.direction.west},
     }
   },
 
@@ -84,35 +76,35 @@ pipeinfo.junctions =
     directions = {["north"]=true, ["east"]=true, ["south"]=true},
     connections =
     {
-      {position = {x=0, y=-1}},
-      {position = {x=1, y=0}},
-      {position = {x=0, y=1}}
+      {position = {0, 0}, direction=defines.direction.north},
+      {position = {0, 0}, direction=defines.direction.east},
+      {position = {0, 0}, direction=defines.direction.south}
     }
   },
   esw = {
     directions = {["east"]=true, ["south"]=true, ["west"]=true},
     connections = {
-      {position = {x=1, y=0}},
-      {position = {x=0, y=1}},
-      {position = {x=-1, y=0}}
+      {position = {0, 0}, direction=defines.direction.east},
+      {position = {0, 0}, direction=defines.direction.south},
+      {position = {0, 0}, direction=defines.direction.west}
     }
   },
   nsw = {
     directions = {["north"]=true, ["south"]=true, ["west"]=true},
     connections =
     {
-      {position = {x=0, y=-1}},
-      {position = {x=0, y=1}},
-      {position = {x=-1, y=0}}
+      {position = {0, 0}, direction=defines.direction.north},
+      {position = {0, 0}, direction=defines.direction.south},
+      {position = {0, 0}, direction=defines.direction.west}
     }
   },
   new = {
     directions = {["north"]=true, ["east"]=true, ["west"]=true},
     connections =
     {
-      {position = {x=0, y=-1}},
-      {position = {x=1, y=0}},
-      {position = {x=-1, y=0}}
+      {position = {0, 0}, direction=defines.direction.north},
+      {position = {0, 0}, direction=defines.direction.east},
+      {position = {0, 0}, direction=defines.direction.west}
     }
   },
 }

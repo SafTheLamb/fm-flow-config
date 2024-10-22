@@ -26,17 +26,24 @@ else:
     cleandir(packagedir)
 
 # Copy all other files into the subfolder
-denyfiles = { f'{packagename}.zip', 'package.py', '.gitignore', 'README.md', }
-denydirs = { f'{packagename}', '.git', '.vscode', }
+denyfiles = { 'package.py', 'package.bat', '.gitignore', 'README.md', 'TODO.md' }
+denyextensions = { '.kra', '.zip' }
+denydirs = { f'{packagename}', '.git', '.vscode' }
+
+def filedenied(name):
+    if os.path.splitext(name)[1] in denyextensions:
+        return True
+    if name in denyfiles:
+        return True
+    return False
+
+def dirdenied(name):
+    return name in denydirs
 
 for root, dirs, files in os.walk(projectdir):
     newroot = os.path.join(packagedir, root.removeprefix(projectdir).removeprefix('\\'))
-    for name in denyfiles:
-        if name in files:
-            files.remove(name)
-    for name in denydirs:
-        if name in dirs:
-            dirs.remove(name)
+    files[:] = [x for x in files if not filedenied(x)]
+    dirs[:] = [x for x in dirs if not dirdenied(x)]
     for name in files:
         shutil.copy(os.path.join(root, name), os.path.join(newroot, name))
     for name in dirs:
@@ -44,9 +51,8 @@ for root, dirs, files in os.walk(projectdir):
 
 # Zip the package up
 packagefile = shutil.make_archive(packagename, 'zip', projectdir, packagename)
-# shutil.copy(packagefile, os.path.join(os.getenv('APPDATA'), f"Factorio/mods/{packagename}.zip"))
 
-# Copy the package directory into the mods subfolder
+# Copy the package directory into the mods subfolder (allows for better debugging and iteration)
 modsdir = os.path.join(os.getenv('APPDATA'), f'Factorio/mods/{packagename}')
 if not os.path.exists(modsdir):
     os.makedirs(modsdir)
