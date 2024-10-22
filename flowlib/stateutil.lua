@@ -161,7 +161,7 @@ function stateutil.is_closed(pipe, dir)
 end
 
 function stateutil.is_aligned(groundpipe, dir)
-  local pipedir = pipeinfo.defines_to_direction[groundpipe.direction]
+  local pipedir = helper.direction_to_string(groundpipe.direction)
   return dir == pipedir or dir == pipeinfo.opposite[pipedir]
 end
 

@@ -1,9 +1,27 @@
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.1
-  Major Features:
-    - First version (huh what's 1.0.0?)
-    - Locking/unlocking pipe flow!
-    - Lock/unlock tool!
+Version: 2.0.1
+  Bugfixes:
+    - Fix compatibility with editor extensions' linked pipe
+
+---------------------------------------------------------------------------------------------------
+Version: 2.0.0
+  Bugfixes:
+    - Update mod to Factorio 2.0.7
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.9
+  Bugfixes:
+    - Fix compat for fluidic power mod by adding its "pipes" to the denylist
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.8
+  Bugfixes:
+    - Fix pipes duplicating when configuring pipes through SE's Navigation Satellite Uplink (the mod, not 2.0)
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.4
+  Bugfixes:
+    - Fix crash when pasting copied pipes
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
@@ -12,16 +30,8 @@ Version: 1.0.3
     - Add compatibility for factorissimo by adding its IO pipes to the denylist
 
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.4
-  Bugfixes:
-    - Fix crash when pasting copied pipes
-
----------------------------------------------------------------------------------------------------
-Version: 1.0.8
-  Bugfixes:
-    - Fix pipes duplicating when configuring pipes through SE's Navigation Satellite Uplink (the mod, not 2.0)
-
----------------------------------------------------------------------------------------------------
-Version: 1.0.9
-  Bugfixes:
-    - Fix compat for fluidic power mod by adding its "pipes" to the denylist
+Version: 1.0.1
+  Major Features:
+    - First version (huh what's 1.0.0?)
+    - Locking/unlocking pipe flow!
+    - Lock/unlock tool!
