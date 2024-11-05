@@ -1,9 +1,24 @@
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.1
-  Major Features:
-    - First version (huh what's 1.0.0?)
-    - Locking/unlocking pipe flow!
-    - Lock/unlock tool!
+Version: 1.1.4
+  Bugfixes:
+    - Backport of 2.0.4 to Factorio 1.1
+    - Fix pipe duplication bug
+    - Fix negative fluid crash
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.9
+  Bugfixes:
+    - Fix compat for fluidic power mod by adding its "pipes" to the denylist
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.8
+  Bugfixes:
+    - Fix pipes duplicating when configuring pipes through SE's Navigation Satellite Uplink (the mod, not 2.0)
+
+---------------------------------------------------------------------------------------------------
+Version: 1.0.4
+  Bugfixes:
+    - Fix crash when pasting copied pipes
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.3
@@ -12,16 +27,8 @@ Version: 1.0.3
     - Add compatibility for factorissimo by adding its IO pipes to the denylist
 
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.4
-  Bugfixes:
-    - Fix crash when pasting copied pipes
-
----------------------------------------------------------------------------------------------------
-Version: 1.0.8
-  Bugfixes:
-    - Fix pipes duplicating when configuring pipes through SE's Navigation Satellite Uplink (the mod, not 2.0)
-
----------------------------------------------------------------------------------------------------
-Version: 1.0.9
-  Bugfixes:
-    - Fix compat for fluidic power mod by adding its "pipes" to the denylist
+Version: 1.0.1
+  Major Features:
+    - First version (huh what's 1.0.0?)
+    - Locking/unlocking pipe flow!
+    - Lock/unlock tool!
