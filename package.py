@@ -26,7 +26,7 @@ else:
     cleandir(packagedir)
 
 # Copy all other files into the subfolder
-denyfiles = { f'{packagename}.zip', 'package.py', '.gitignore', 'README.md', }
+denyfiles = { f'{packagename}.zip', 'package.py', 'package.bat', '.gitignore', 'README.md', }
 denydirs = { f'{packagename}', '.git', '.vscode', }
 
 for root, dirs, files in os.walk(projectdir):
