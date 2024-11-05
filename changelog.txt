@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.4
+  Bugfixes:
+    - Fix pipe duplication bug
+    - Fix negative fluid crash
+
+---------------------------------------------------------------------------------------------------
 Version: 2.0.3
   Bugfixes:
     - Fix crash when clicking on underground pipes
@@ -12,6 +18,13 @@ Version: 2.0.1
 Version: 2.0.0
   Bugfixes:
     - Update mod to Factorio 2.0.7
+
+---------------------------------------------------------------------------------------------------
+Version: 1.1.4
+  Bugfixes:
+    - Fix pipe duplication bug
+    - Fix negative fluid crash
+    - Backport of 2.0.4
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.9
