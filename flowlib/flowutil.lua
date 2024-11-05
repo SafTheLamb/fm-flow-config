@@ -43,7 +43,7 @@ function flowutil.replace_pipe(player, pipe, directions)
       local fluids = {}
       if #pipe.fluidbox > 0 then
         for i=1,#pipe.fluidbox do
-          if pipe.fluidbox[i].amount > 0 then
+          if pipe.fluidbox[i] and pipe.fluidbox[i].amount > 0 then
             table.insert(fluids, pipe.fluidbox[i])
           end
         end
