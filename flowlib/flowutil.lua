@@ -22,13 +22,13 @@ function flowutil.construct_pipename(basename, juncname)
 end
 
 function flowutil.replace_pipe(player, pipe, directions)
-  local force = player ~= nil and player.force or pipe.force
+  local force = player and player.force or pipe.force
   if pipe.type == "entity-ghost" then
     local data = stateutil.get_pipe_data(pipe.ghost_name)
     if data then
       local newname = flowutil.construct_pipename(data.basename, flowutil.get_juncname(directions))
       local newpipe = pipe.surface.create_entity{name="entity-ghost", inner_name=newname, position=pipe.position, force=force, fast_replace=true, player=player, spill=false, create_build_effect_smoke=false}
-      if pipe ~= nil then pipe.destroy() end -- TODO: Test me??
+      if pipe then pipe.destroy() end -- TODO: Test me??
       return newpipe
     end
   else
@@ -43,7 +43,7 @@ function flowutil.replace_pipe(player, pipe, directions)
       local fluids = {}
       if #pipe.fluidbox > 0 then
         for i=1,#pipe.fluidbox do
-          if pipe.fluidbox[i].amount > 0 then
+          if pipe.fluidbox[i] and pipe.fluidbox[i].amount > 0 then
             table.insert(fluids, pipe.fluidbox[i])
           end
         end

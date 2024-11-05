@@ -336,7 +336,7 @@ local function on_entity_settings_pasted(event)
   if do_paste then
     local was_opened = (player.opened == pipe)
     local newpipe = flowutil.replace_pipe(player, pipe, states.directions)
-    if was_opened and newpipe ~= nil then
+    if was_opened and newpipe then
       player.opened = newpipe
     end
     gui.update_all()
