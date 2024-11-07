@@ -51,7 +51,9 @@ function flowutil.replace_pipe(player, pipe, directions)
       local health = pipe.health
 
       -- destroy the old pipe then create the new one
-      pipe.clear_fluid_inside()
+      for _,fluid in pairs(fluids) do
+        pipe.remove_fluid{name=fluid.name, amount=fluid.amount, temperature=fluid.temperature}
+      end
       pipe.destroy()
       local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
       for _,fluid in pairs(fluids) do
