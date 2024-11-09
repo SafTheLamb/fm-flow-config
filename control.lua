@@ -18,9 +18,8 @@ function gui.create(player)
   local flow_content = frame_content.add({type="flow", name="flow_content", direction="vertical"})
 
   -- toggle button section
-  local toggle_content = flow_content.add({type="flow", name="toggle_content", direction="horizontal", align="center"})
-  toggle_content.add({type="label", name="label_toggle", caption={"fc-gui.toggle"}, style="heading_2_label"})
-  local toggle_button = toggle_content.add({type="sprite-button", name="toggle_button", sprite="fc-toggle-locked", style="button"})
+  local toggle_content = flow_content.add({type="flow", name="toggle_content", direction="horizontal"})
+  local toggle_button = toggle_content.add({type="sprite-button", name="toggle_button", sprite="fc-toggle-locked", style="fc_toggle_button"})
   toggle_button.enabled = false
 
   flow_content.add({type="line", name="line", style="line"})
@@ -65,15 +64,15 @@ end
 function gui.update_toggle_button(states, button)
   if stateutil.can_lock(states) then
     button.sprite = "fc-toggle-close"
-    button.caption={"fc-gui.close"}
+    button.caption={"fc-gui.toggle-close"}
     button.enabled = true
   elseif stateutil.can_unlock(states) then
     button.sprite = "fc-toggle-open"
-    button.caption={"fc-gui.open"}
+    button.caption={"fc-gui.toggle-open"}
     button.enabled = true
   else
     button.sprite = "fc-toggle-locked"
-    button.caption={"fc-gui.locked"}
+    button.caption={"fc-gui.toggle-locked"}
     button.enabled = false
   end
 end

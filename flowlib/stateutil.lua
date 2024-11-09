@@ -258,7 +258,7 @@ function stateutil.get_pipe_to_ground_direction_states(pipe)
 end
 
 function stateutil.can_lock(states)
-  return (states.num_open > 0 and states.num_flow >= 2)
+  return (states.num_open > 0 and states.num_flow >= 2 and (states.num_flow + states.num_block) < 4)
 end
 
 function stateutil.can_unlock(states)

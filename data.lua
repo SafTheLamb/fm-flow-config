@@ -1,4 +1,5 @@
 require("prototypes.icons")
+require("prototypes.style")
 
 data:extend({
   {
