@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.8
+  Bugfixes:
+    - Fix incompatibility with No Pipes Touching 2.0
+
+---------------------------------------------------------------------------------------------------
 Version: 2.0.7
   Bugfixes:
     - Fix crash caused by clicking the text to the left of the flow toggle button (simply removed the "Toggle" label)

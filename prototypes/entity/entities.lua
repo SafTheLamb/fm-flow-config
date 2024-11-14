@@ -18,14 +18,22 @@ for _,entity in pairs(data.raw.pipe) do
       local copy = util.copy(entity)
       copy.name = entity.name.."-fc-"..juncname
       copy.hidden = true
-      if copy.localised_name == nil then copy.localised_name = { "entity-name."..entity.name } end
-      copy.fluid_box.pipe_connections = junction.connections
-      if not copy.placeable_by then copy.placeable_by = {item = entity.name, count = 1} end
+      if copy.localised_name == nil then
+        copy.localised_name = { "entity-name."..entity.name }
+      end
+
+      for i=#copy.fluid_box.pipe_connections,1,-1 do
+        if junction.directions[copy.fluid_box.pipe_connections[i].direction] ~= true then
+          table.remove(copy.fluid_box.pipe_connections, i)
+        end
+      end
+
+      if not copy.placeable_by then
+        copy.placeable_by = {item = entity.name, count = 1}
+      end
       if copy.next_upgrade then
         copy.next_upgrade = copy.next_upgrade.."-fc-"..juncname
       end
-      -- Fast Replace isn't desirable, but next_upgrade, used by other mods, needs this set
-      -- copy.fast_replaceable_group = nil
       
       table.insert(junction_entities, copy)
       table.insert(all_pipe_names, copy.name)

@@ -1,11 +1,12 @@
 {
     "name": "flow-config",
-    "version": "2.0.7",
+    "version": "2.0.8",
     "title": "Flow Configuration",
     "author": "SafTheLamb",
     "homepage": "https://github.com/sapphiriza/FactorioMod_FlowConfig",
     "dependencies": [
-        "base >= 2.0.7"
+        "base >= 2.0.7",
+        "(?) no-pipe-touching"
     ],
     "description": "More control over pipes. Similar results as Flow Control, but with the GUI and hotkeys of Inserter Configuration instead of unique items per bend. Run pipes with different fluids next to each other!",
     "factorio_version": "2.0"
