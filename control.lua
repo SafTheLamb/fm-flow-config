@@ -182,7 +182,7 @@ end
 
 function gui.on_button_direction(player, event)
   local pipe = player.opened
-  if stateutil.is_denied(pipe) then return end
+  if not pipe or stateutil.is_denied(pipe) then return end
   
   local dir = gui.get_button_direction(event.element)
   local newpipe = flowutil.toggle_direction(player, pipe, dir)

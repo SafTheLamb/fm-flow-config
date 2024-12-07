@@ -1,15 +1,13 @@
 local pipeinfo = {}
 
-pipeinfo.directions =
-{
+pipeinfo.directions = {
   north = {x=0, y=-1},
   east  = {x=1, y=0},
   south = {x=0, y=1},
   west  = {x=-1, y=0}
 }
 
-pipeinfo.opposite =
-{
+pipeinfo.opposite = {
   ["north"] = "south",
   ["east"]  = "west",
   ["south"] = "north",
@@ -20,11 +18,9 @@ pipeinfo.opposite =
   [defines.direction.west] = defines.direction.east
 }
 
-pipeinfo.junctions =
-{
+pipeinfo.junctions = {
   -- straight ---------------------------------
-  ns =
-  {
+  ns = {
     directions = {["north"]=true, ["south"]=true, [defines.direction.north]=true, [defines.direction.south]=true}
   },
   ew = {

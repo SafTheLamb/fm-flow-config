@@ -32,10 +32,11 @@ function stateutil.is_denied(pipe)
 end
 
 function stateutil.get_prototype(pipe)
-  if pipe.type == "entity-ghost" then
-    return pipe.ghost_prototype
-  end
-  return pipe.prototype
+  return pipe.type == "entity-ghost" and pipe.ghost_prototype or pipe.prototype
+end
+
+function stateutil.get_pipe_name(pipe)
+  return pipe.type == "entity-ghost" and pipe.ghost_name or pipe.name
 end
 
 function stateutil.get_pipe_data(pipename)
@@ -134,7 +135,7 @@ end
 
 function stateutil.is_open(pipe, dir)
   -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
-  local data = stateutil.get_pipe_data(pipe.name)
+  local data = stateutil.get_pipe_data(stateutil.get_pipe_name(pipe))
   if data and data.juncname ~= nil then
     local junction = pipeinfo.junctions[data.juncname]
     if junction.directions[dir] == true then
@@ -150,7 +151,7 @@ end
 
 function stateutil.is_closed(pipe, dir)
   -- look up the pipe info based on the pipe name (i couldn't find any other way! D:)
-  local data = stateutil.get_pipe_data(pipe.name)
+  local data = stateutil.get_pipe_data(stateutil.get_pipe_name(pipe))
   if data and data.juncname ~= nil then
     local junction = pipeinfo.junctions[data.juncname]
     if junction.directions[dir] ~= true then
