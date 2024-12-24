@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.0
+  Bugfixes:
+    - Fix compatibility with [Actual underground pipes](https://mods.factorio.com/mod/the-one-mod-with-underground-bits)
+
+---------------------------------------------------------------------------------------------------
 Version: 2.0.9
   Bugfixes:
     - Fix functionality with ghost pipes
