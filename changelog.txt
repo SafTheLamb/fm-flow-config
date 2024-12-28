@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.2
+  Changes:
+    - Update thumbnail
+
+---------------------------------------------------------------------------------------------------
 Version: 2.1.1
   Bugfixes:
     - Improve compatibility with Actual underground pipes and No Pipes Touching (now respects when two pipes won't interact anyway)
