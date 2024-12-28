@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.1
+  Bugfixes:
+    - Improve compatibility with Actual underground pipes and No Pipes Touching (now respects when two pipes won't interact anyway)
+    - Unhide Actual underground pipes and No pipes touching for better discoverability, now that cross-functionality is stable
+
+---------------------------------------------------------------------------------------------------
 Version: 2.1.0
   Bugfixes:
     - Fix compatibility with [Actual underground pipes](https://mods.factorio.com/mod/the-one-mod-with-underground-bits)

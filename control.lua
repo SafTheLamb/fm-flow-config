@@ -216,6 +216,9 @@ end
 local function create_pipe_map()
   log("Searching prototype list for flow config pipes")
   storage.pipes = {}
+  storage.mods = {}
+  storage.mods.tomwub = script.active_mods["the-one-mod-with-underground-bits"]
+  storage.mods.npt = script.active_mods["no-pipe-touching"]
   for _,prototype in pairs(prototypes.get_entity_filtered({{filter="type", type="pipe"}})) do
     if prototype.type == "pipe" then
       local split = util.split(prototype.name, "-")
@@ -231,7 +234,10 @@ local function create_pipe_map()
         end
       end
       log("entity="..prototype.name..", basename="..base..", juncname="..(junc or ""))
-      storage.pipes[prototype.name]={basename=base, juncname=junc}
+      storage.pipes[prototype.name] = {basename=base, juncname=junc}
+      if storage.mods.tomwub then
+        storage.pipes[prototype.name].tomwub = util.string_starts_with(base, "tomwub-")
+      end
     end
   end
 end

@@ -89,6 +89,21 @@ function stateutil.are_fluids_compatible(pipe, otherbox, other_index)
   return true
 end
 
+function stateutil.can_pipes_connect(pipe, other)
+  if pipe.type == "pipe" and other.type == "pipe" then
+    local pipedata = stateutil.get_pipe_data(stateutil.get_pipe_name(pipe))
+    local otherdata = stateutil.get_pipe_data(stateutil.get_pipe_name(other))
+    if storage.mods.npt then
+      return pipedata.basename == otherdata.basename
+    elseif storage.mods.tomwub then
+      if pipedata.tomwub ~= otherdata.tomwub then
+        return false
+      end
+    end
+  end
+  return true
+end
+
 function stateutil.is_flowing(pipe, dir)
   local dirpos = pipeinfo.directions[dir]
   local searchpos = math2d.position.add(pipe.position, dirpos)
@@ -166,7 +181,7 @@ function stateutil.is_aligned(groundpipe, dir)
   return dir == pipedir or dir == pipeinfo.opposite[pipedir]
 end
 
-function stateutil.is_blocked(pipe, dir, check_close)
+function stateutil.is_blocked(pipe, dir, check_closed)
   local dirpos = pipeinfo.directions[dir]
   local searchpos = math2d.position.add(pipe.position, dirpos)
   
@@ -175,7 +190,7 @@ function stateutil.is_blocked(pipe, dir, check_close)
   if #others > 0 then
     for _,other in pairs(others) do
       -- if the entity is a pipe and it's closed in this direction, we don't have to be blocked
-      if stateutil.is_pipe(other) and check_close == true then
+      if stateutil.is_pipe(other) and check_closed == true then
         if stateutil.is_closed(other, pipeinfo.opposite[dir]) then
           return false
         end
@@ -190,11 +205,11 @@ function stateutil.is_blocked(pipe, dir, check_close)
         for i=1,#other.fluidbox do
           -- check if a connection exists at the searchpos
           if #other.fluidbox.get_pipe_connections(i) > 0 then
-            for _,connection in pairs(other.fluidbox.get_pipe_connections(i)) do
+            for j,connection in pairs(other.fluidbox.get_pipe_connections(i)) do
               if math2d.position.equal(connection.position, searchpos) then
-                -- if the fluids are not compatible, then block the connection
-                if stateutil.are_fluids_compatible(pipe, other.fluidbox, i) ~= true then
-                  return true
+                if stateutil.can_pipes_connect(pipe, other) then
+                  -- if the fluids are not compatible, then block the connection
+                  return not stateutil.are_fluids_compatible(pipe, other.fluidbox, i)
                 end
                 return false
               end
