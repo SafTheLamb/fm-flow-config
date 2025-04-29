@@ -19,7 +19,7 @@ if not mods["Flow_Control"] then
         copy.name = entity.name.."-fc-"..juncname
         copy.hidden = true
         if copy.localised_name == nil then
-          copy.localised_name = { "entity-name."..entity.name }
+          copy.localised_name = {"entity-name."..entity.name}
         end
 
         for i=#copy.fluid_box.pipe_connections,1,-1 do

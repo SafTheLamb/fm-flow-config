@@ -140,7 +140,7 @@ function gui.update_pipe_to_ground(player, pipe)
 end
 
 function gui.update_all()
-  for idx, player in pairs(game.players) do
+  for _, player in pairs(game.players) do
     if player.opened then
       if stateutil.is_pipe(player.opened) then
         gui.update_pipe(player, player.opened)
@@ -151,8 +151,7 @@ function gui.update_all()
   end
 end
 
-local index_to_direction =
-{
+local index_to_direction = {
   [2] = "north",
   [4] = "west",
   [6] = "east",
@@ -166,6 +165,7 @@ end
 
 function gui.on_button_toggle(player, event)
   local pipe = player.opened
+  if not pipe then return end
   if stateutil.is_denied(pipe) then return end
 
   local newpipe = nil

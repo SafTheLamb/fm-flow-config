@@ -47,7 +47,7 @@ function stateutil.get_pipe_data(pipename)
 end
 
 function stateutil.is_pipe(entity)
-  return entity and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
+  return entity and entity.type and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
 end
 
 function stateutil.is_pipe_to_ground(entity)
