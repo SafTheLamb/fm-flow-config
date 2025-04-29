@@ -1,3 +1,1 @@
----------------------------------------------------------------------------------------------------
-
-require("prototypes.entity.entities")
+require("prototypes.entity.pipes")

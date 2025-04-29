@@ -233,7 +233,6 @@ local function create_pipe_map()
           if base == "" then base = s else base = base..'-'..s end
         end
       end
-      log("entity="..prototype.name..", basename="..base..", juncname="..(junc or ""))
       storage.pipes[prototype.name] = {basename=base, juncname=junc}
       if storage.mods.tomwub then
         storage.pipes[prototype.name].tomwub = util.string_starts_with(base, "tomwub-")
@@ -247,14 +246,12 @@ local function update_denylist()
 end
 
 local function on_init()
-  log("flow-config::on_init")
   create_pipe_map()
   update_denylist()
   gui.create_all()
 end
 
 local function on_configuration_changed(cfg_changed_data)
-  log("flow-config::on_configuration_changed")
   create_pipe_map()
   update_denylist()
   gui.create_all()
