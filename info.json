@@ -4,6 +4,9 @@
   "title": "Flow Configuration",
   "author": "SafTheLamb",
   "homepage": "https://github.com/safthelamb/fm-flow-config",
+  "package": {
+    "ignore": ["thumbnail.afphoto", "thumbnail.pdn", "**/*.afphoto", "**/*.ase", "**/*.afphoto~lock~", "**/*.pdn"]
+  },
   "dependencies": [
     "base >= 2.0.7",
     "? no-pipe-touching",
