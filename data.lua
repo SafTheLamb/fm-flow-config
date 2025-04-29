@@ -31,7 +31,7 @@ data:extend({
     type = "custom-input",
     name = "give-flow-key-tool",
     localised_name = {"fc-tools.flow-key-tool"},
-    key_sequence = "ALT + F",
+    key_sequence = "ALT + W",
     consuming = "game-only",
     item_to_spawn = "fc-flow-key-tool",
     action = "spawn-item",
