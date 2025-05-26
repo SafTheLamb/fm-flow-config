@@ -56,4 +56,11 @@ pipeinfo.junctions = {
   },
 }
 
+pipeinfo.prefix_denylist = {
+  "factory-",
+  "underwater-pipe-placer",
+  "fluidic-",
+  "ee-linked-",
+}
+
 return pipeinfo

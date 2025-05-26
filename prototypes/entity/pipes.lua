@@ -1,6 +1,9 @@
 local pipeinfo = require("flowlib.pipeinfo")
 
 local denylist_prefixes = util.split(settings.startup["flow-config-denylist"].value, ',')
+for _,prefix in pairs(pipeinfo.prefix_denylist) do
+  table.insert(denylist_prefixes, prefix)
+end
 
 if not mods["Flow_Control"] then
   -- add to local lists to avoid going recursive!
@@ -29,7 +32,9 @@ if not mods["Flow_Control"] then
         end
 
         if not copy.placeable_by then
-          copy.placeable_by = {item = entity.name, count = 1}
+          if data.raw.item[entity.name] then
+            copy.placeable_by = {item=entity.name, count=1}
+          end
         end
         if copy.next_upgrade then
           copy.next_upgrade = copy.next_upgrade.."-fc-"..juncname

@@ -243,6 +243,9 @@ end
 
 local function update_denylist()
   storage.denylist_prefixes = util.split(settings.startup["flow-config-denylist"].value, ',')
+  for _,prefix in pairs(pipeinfo.prefix_denylist) do
+    table.insert(storage.denylist_prefixes, prefix)
+  end
 end
 
 local function on_init()
