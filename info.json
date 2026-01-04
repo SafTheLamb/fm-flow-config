@@ -5,12 +5,13 @@
   "author": "SafTheLamb",
   "homepage": "https://github.com/safthelamb/fm-flow-config",
   "package": {
-    "ignore": ["thumbnail.afphoto", "thumbnail.pdn", "**/*.afphoto", "**/*.ase", "**/*.afphoto~lock~", "**/*.pdn"]
+    "ignore": ["thumbnail.af", "thumbnail.pdn", "**/*.af", "**/*.ase", "**/*.af~lock~", "**/*.pdn"]
   },
   "dependencies": [
     "base >= 2.0.7",
     "? no-pipe-touching",
-    "? the-one-mod-with-underground-bits"
+    "? the-one-mod-with-underground-bits",
+    "(?) IndustrialRevolution3"
   ],
   "description": "More control over pipes. Similar results as Flow Control, but with the GUI and hotkeys of Inserter Configuration instead of unique items per bend. Run pipes with different fluids next to each other!",
   "factorio_version": "2.0"
