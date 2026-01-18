@@ -1,7 +1,8 @@
 {
   "name": "flow-config",
-  "version": "2.1.6",
   "title": "Flow Configuration",
+  "description": "More control over pipes. Similar results as Flow Control, but with the GUI and hotkeys of Inserter Configuration instead of unique items per bend. Run pipes with different fluids next to each other!",
+  "version": "2.1.6",
   "author": "SafTheLamb",
   "homepage": "https://github.com/safthelamb/fm-flow-config",
   "package": {
@@ -10,9 +11,7 @@
   "dependencies": [
     "base >= 2.0.7",
     "? no-pipe-touching",
-    "? the-one-mod-with-underground-bits",
-    "(?) IndustrialRevolution3"
+    "? the-one-mod-with-underground-bits"
   ],
-  "description": "More control over pipes. Similar results as Flow Control, but with the GUI and hotkeys of Inserter Configuration instead of unique items per bend. Run pipes with different fluids next to each other!",
   "factorio_version": "2.0"
 }
