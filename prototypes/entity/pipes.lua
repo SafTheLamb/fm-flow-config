@@ -20,7 +20,7 @@ if not mods["Flow_Control"] then
 			for juncname,junction in pairs(pipeinfo.junctions) do
 				local copy = util.copy(entity)
 				copy.name = entity.name.."-fc-"..juncname
-				copy.hidden = true
+				copy.hidden_in_factoriopedia = true
 				if copy.localised_name == nil then
 					copy.localised_name = {"entity-name."..entity.name}
 				end
@@ -39,7 +39,7 @@ if not mods["Flow_Control"] then
 				if copy.next_upgrade then
 					copy.next_upgrade = copy.next_upgrade.."-fc-"..juncname
 				end
-				
+
 				table.insert(junction_entities, copy)
 				table.insert(all_pipe_names, copy.name)
 			end
