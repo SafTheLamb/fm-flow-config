@@ -2,7 +2,7 @@
   "name": "flow-config",
   "title": "Flow Configuration",
   "description": "More control over pipes. Similar results as Flow Control, but with the GUI and hotkeys of Inserter Configuration instead of unique items per bend. Run pipes with different fluids next to each other!",
-  "version": "2.1.7",
+  "version": "2.1.8",
   "author": "SafTheLamb",
   "homepage": "https://github.com/safthelamb/fm-flow-config",
   "package": {
