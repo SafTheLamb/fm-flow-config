@@ -54,19 +54,19 @@ function stateutil.is_pipe_to_ground(entity)
 		return entity and (entity.type == "pipe-to-ground" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe-to-ground"))
 end
 
-function stateutil.are_fluids_compatible(pipe, otherbox, other_index)
+function stateutil.are_fluids_compatible(pipe, other, other_index)
 	local fluids_a = pipe.get_fluid_contents()
-	local fluids_b = otherbox.get_fluid_segment_contents(other_index)
+	local fluids_b = other.get_fluid_segment_contents(other_index)
 	if fluids_b == nil then return true end
 	-- artificially add a fluid entry of 0 for filtered fluids
-	if pipe.fluidbox.get_filter(1) ~= nil then
-		local filter = pipe.fluidbox.get_filter(1)
-		fluids_a[filter.name] = 0
+	if pipe.get_fluid_segment_filter(1) ~= nil then
+		local filter = pipe.get_fluid_segment_filter(1)
+		fluids_a[type(filter.fluid) == "string" and filter.fluid or filter.fluid.name] = 0
 	end
 	-- do the same for other
-	if otherbox.get_filter(other_index) ~= nil then
-		local filter = otherbox.get_filter(other_index)
-		fluids_b[filter.name] = 0
+	if other.get_fluid_segment_filter(other_index) ~= nil then
+		local filter = other.get_fluid_segment_filter(other_index)
+		fluids_b[type(filter.fluid) == "string" and filter.fluid or filter.fluid.name] = 0
 	end
 
 	-- if either fluidbox is empty, then compatibility is guaranteed
@@ -109,36 +109,17 @@ function stateutil.is_flowing(pipe, dir)
 	local searchpos = math2d.position.add(pipe.position, dirpos)
 
 	-- try with pipe connections first
-	if #pipe.fluidbox.get_pipe_connections(1) > 0 then
-		for _,connection in pairs(pipe.fluidbox.get_pipe_connections(1)) do
+	if #pipe.get_fluid_box_pipe_connections(1) > 0 then
+		for _,connection in pairs(pipe.get_fluid_box_pipe_connections(1)) do
 			-- if we have a target, check if the connection position delta matches the direction offset
 			if connection.target ~= nil and connection.target_pipe_connection_index ~= nil then
 				local fluidbox_index = connection.target_fluidbox_index or 1
-				local target_connection = connection.target.get_pipe_connections(fluidbox_index)[connection.target_pipe_connection_index]
+				local target_connection = connection.target.get_fluid_box_pipe_connections(fluidbox_index)[connection.target_pipe_connection_index]
 				-- TODO: target_pipe_connection_index MAY be referring to a connection in not the first fluidbox?
 				if target_connection then
 					local delta = math2d.position.subtract(target_connection.position, connection.position)
 					if math2d.position.are_codirectional(dirpos, delta) then
 						return true
-					end
-				end
-			end
-		end
-	end
-
-	-- also check for fluidbox connections (connections from outputs don't count as pipe connections, since they're 1-way)
-	if #pipe.fluidbox.get_connections(1) > 0 then
-		for _,otherbox in pairs(pipe.fluidbox.get_connections(1)) do
-			if #otherbox > 0 then
-				for i=1,#otherbox do
-					-- check pipe connections from the other fluidboxes for connections with this pipe
-					if #otherbox.get_pipe_connections(i) > 0 then
-						for _,connection in pairs(otherbox.get_pipe_connections(i)) do
-							-- if the searchpos matches the connection position, we have the right fluidbox
-							if math2d.position.equal(connection.position, searchpos) and stateutil.are_fluids_compatible(pipe, otherbox, i) then
-								return true
-							end
-						end
 					end
 				end
 			end
@@ -201,15 +182,16 @@ function stateutil.is_blocked(pipe, dir, check_closed)
 				end
 			end
 
-			if other.fluidbox ~= nil and #other.fluidbox > 0 then
-				for i=1,#other.fluidbox do
+			if other.fluids_count then
+				for i=1,other.fluids_count do
 					-- check if a connection exists at the searchpos
-					if #other.fluidbox.get_pipe_connections(i) > 0 then
-						for j,connection in pairs(other.fluidbox.get_pipe_connections(i)) do
+					local other_connections = other.get_fluid_box_pipe_connections(i)
+					if #other_connections > 0 then
+						for j,connection in pairs(other_connections) do
 							if math2d.position.equal(connection.position, searchpos) then
 								if stateutil.can_pipes_connect(pipe, other) then
 									-- if the fluids are not compatible, then block the connection
-									return not stateutil.are_fluids_compatible(pipe, other.fluidbox, i)
+									return not stateutil.are_fluids_compatible(pipe, other, i)
 								end
 								return false
 							end

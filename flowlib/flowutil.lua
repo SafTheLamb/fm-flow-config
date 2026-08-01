@@ -41,11 +41,11 @@ function flowutil.replace_pipe(player, pipe, directions)
 			local surface = pipe.surface
 
 			local fluids = {}
-			if #pipe.fluidbox > 0 then
-				for i=1,#pipe.fluidbox do
-					if pipe.fluidbox[i] and pipe.fluidbox[i].amount > 0 then
-						table.insert(fluids, pipe.fluidbox[i])
-					end
+			for i=1,pipe.fluids_count do
+				local fluid = pipe.get_fluid(i)
+				if fluid then
+					fluids[i] = fluid
+					table.insert(fluids, fluid)
 				end
 			end
 			local health = pipe.health
@@ -56,8 +56,8 @@ function flowutil.replace_pipe(player, pipe, directions)
 			end
 			pipe.destroy()
 			local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
-			for _,fluid in pairs(fluids) do
-				newpipe.insert_fluid(fluid)
+			for index,fluid in pairs(fluids) do
+				newpipe.add_fluid(index, fluid)
 			end
 			newpipe.health = health
 			return newpipe
