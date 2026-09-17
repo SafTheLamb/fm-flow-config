@@ -55,38 +55,30 @@ function stateutil.is_pipe_to_ground(entity)
 end
 
 function stateutil.are_fluids_compatible(pipe, other, other_index)
-	local fluids_a = pipe.get_fluid_contents()
-	local fluids_b = other.get_fluid_segment_contents(other_index)
-	if fluids_b == nil then return true end
-	-- artificially add a fluid entry of 0 for filtered fluids
-	if pipe.get_fluid_segment_filter(1) ~= nil then
+	local fluid_a = pipe.get_fluid_segment_fluid(1)
+	if fluid_a and fluid_a.name then
+		fluid_a = fluid_a.name
+	else
 		local filter = pipe.get_fluid_segment_filter(1)
-		fluids_a[type(filter.fluid) == "string" and filter.fluid or filter.fluid.name] = 0
+		if filter then
+			fluid_a = type(filter.fluiid) == "string" and filter.fluid or filter.fluid.name
+		end
 	end
+	if fluid_a == nil then return true end
+
+	local fluid_b = other.get_fluid_segment_fluid(other_index)
 	-- do the same for other
-	if other.get_fluid_segment_filter(other_index) ~= nil then
+	if fluid_b and fluid_b.name then
+		fluid_b = fluid_b.name
+	else
 		local filter = other.get_fluid_segment_filter(other_index)
-		fluids_b[type(filter.fluid) == "string" and filter.fluid or filter.fluid.name] = 0
-	end
-
-	-- if either fluidbox is empty, then compatibility is guaranteed
-	if next(fluids_a) == nil or next(fluids_b) == nil then
-		return true
-	end
-
-	-- otherwise, make sure all the fluids match
-	for name,amount in pairs(fluids_a) do
-		if fluids_b[name] == nil then
-			return false
+		if filter then
+			fluid_b = type(filter.fluid) == "string" and filter.fluid or filter.fluid.name
 		end
 	end
-	for name,amount in pairs(fluids_b) do
-		if fluids_a[name] == nil then
-			return false
-		end
-	end
+	if fluid_b == nil then return true end
 
-	return true
+	return fluid_a == fluid_b
 end
 
 function stateutil.can_pipes_connect(pipe, other)

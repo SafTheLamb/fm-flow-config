@@ -35,29 +35,22 @@ function flowutil.replace_pipe(player, pipe, directions)
 		-- copy the fluids from the old pipe
 		local data = stateutil.get_pipe_data(pipe.name)
 		if data then
+			-- destroy the old pipe then create the new one
 			local newname = flowutil.construct_pipename(data.basename, flowutil.get_juncname(directions))
 
 			local position = pipe.position
 			local surface = pipe.surface
-
-			local fluids = {}
-			for i=1,pipe.fluids_count do
-				local fluid = pipe.get_fluid(i)
-				if fluid then
-					fluids[i] = fluid
-					table.insert(fluids, fluid)
-				end
-			end
 			local health = pipe.health
 
-			-- destroy the old pipe then create the new one
-			for _,fluid in pairs(fluids) do
-				pipe.remove_fluid{name=fluid.name, amount=fluid.amount, temperature=fluid.temperature}
+			local fluid = pipe.get_fluid(1)
+			if fluid then
+				pipe.remove_fluid(1, fluid.amount)
 			end
+
 			pipe.destroy()
 			local newpipe = surface.create_entity{name=newname, position=position, fast_replace=true, force=force, player=player, spill=false, create_build_effect_smoke=false}
-			for index,fluid in pairs(fluids) do
-				newpipe.add_fluid(index, fluid)
+			if fluid then
+				newpipe.add_fluid_segment_fluid(1, fluid)
 			end
 			newpipe.health = health
 			return newpipe
