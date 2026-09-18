@@ -1,5 +1,6 @@
 local pipeinfo = require("flowlib.pipeinfo")
 local stateutil = require("flowlib.stateutil")
+local math2d = require("__core__.lualib.math2d")
 
 local flowutil = {}
 
@@ -84,34 +85,93 @@ function flowutil.toggle_direction(player, pipe, dir)
 	return nil
 end
 
-function flowutil.try_lock_pipe(player, pipe)
+function flowutil.try_lock_pipe(player, pipe, area)
 	local states = stateutil.get_direction_states(pipe)
-	if not stateutil.can_lock(states) then return nil end
+	if not area and not stateutil.can_lock(states) then return nil end
 
+	local do_replace = false
 	for dir,_ in pairs(pipeinfo.directions) do
-		if states[dir] == "open" then
+		if stateutil.is_restricted(pipe, dir, area) then
+			if states.directions[dir] then
+				states.directions[dir] = nil
+				do_replace = true
+			end
+		elseif states[dir] == "open" then
 			states.directions[dir] = nil
+			do_replace = true
 		end
 	end
 
-	return flowutil.replace_pipe(player, pipe, states.directions)
-end
-
-function flowutil.try_unlock_pipe(player, pipe, check_fluid_compatibility)
-	local states = stateutil.get_direction_states(pipe)
-	if not stateutil.can_unlock(states) then return nil end
-
-	local do_unlock = false
-	for dir,_ in pairs(pipeinfo.directions) do
-		if states[dir] == "close" then
-			if (not check_fluid_compatibility) or (not stateutil.is_blocked(pipe, dir)) then
+	-- If using a restricted area is too ambitious, unlock previously open connections within the bounds
+	if area and table_size(states.directions) < 2 then
+		for dir,_ in pairs(pipeinfo.directions) do
+			if states[dir] == "open" and not stateutil.is_restricted(pipe, dir, area) then
 				states.directions[dir] = true
-				do_unlock = true
 			end
 		end
 	end
 
-	if do_unlock then
+	if do_replace and table_size(states.directions) >= 2 then
+		return flowutil.replace_pipe(player, pipe, states.directions)
+	end
+	return nil
+end
+
+function flowutil.try_unlock_pipe(player, pipe, area)
+	local states = stateutil.get_direction_states(pipe)
+	if not stateutil.can_unlock(states) then return nil end
+
+	local do_replace = false
+	if area then
+		for dir,_ in pairs(pipeinfo.directions) do
+			if stateutil.is_restricted(pipe, dir, area) and states[dir] ~= "block" then
+				if not states.directions[dir] then
+					states.directions[dir] = true
+					do_replace = true
+				end
+			end
+		end
+	else
+		for dir,_ in pairs(pipeinfo.directions) do
+			if states[dir] == "close" then
+				states.directions[dir] = true
+				do_replace = true
+			end
+		end
+	end
+
+	if do_replace and table_size(states.directions) >= 2 then
+		return flowutil.replace_pipe(player, pipe, states.directions)
+	end
+	return nil
+end
+
+function flowutil.force_lock_pipe(player, pipe, area)
+	local states = stateutil.get_direction_states(pipe)
+	if not area and not stateutil.can_lock(states) then return nil end
+
+	local do_replace = false
+	for dir,offset in pairs(pipeinfo.directions) do
+		if not stateutil.is_restricted(pipe, dir, area) then
+			local searchpos = math2d.position.add(pipe.position, offset)
+			local others = pipe.surface.find_entities_filtered{position=searchpos, type="pipe"}
+			if #others > 0 and states.directions[dir] then
+				states.directions[dir] = nil
+				do_replace = true
+			end
+		end
+	end
+
+	-- If the lock is too ambitious, try unlocking closed connections
+	if table_size(states.directions) < 2 then
+		for dir,_ in pairs(pipeinfo.directions) do
+			if not states.directions[dir] and states[dir] == "close" then
+				states.directions[dir] = true
+			end
+		end
+	end
+
+	if do_replace and table_size(states.directions) >= 2 then
 		return flowutil.replace_pipe(player, pipe, states.directions)
 	end
 	return nil

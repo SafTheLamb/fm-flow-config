@@ -1,6 +1,6 @@
 local util = require("__core__.lualib.util")
 local pipeinfo = require("flowlib.pipeinfo")
-local math2d = require("math2d")
+local math2d = require("__core__.lualib.math2d")
 
 function math2d.position.equal(p1, p2)
 	p1 = math2d.position.ensure_xy(p1)
@@ -197,6 +197,19 @@ function stateutil.is_blocked(pipe, dir, check_closed)
 	return false
 end
 
+function stateutil.is_restricted(pipe, dir, area)
+	if not area then return false end
+
+	local dirpos = pipeinfo.directions[dir]
+	local searchpos = math2d.position.add(pipe.position, dirpos)
+	-- only applies to where a pipe borders the edge of the area
+	if not math2d.bounding_box.contains_point(area, searchpos) then
+		return true
+	end
+	return false
+end
+
+---@return table
 function stateutil.get_empty_states()
 	return {directions={}, num_flow=0, num_open=0, num_block=0, num_close=0}
 end

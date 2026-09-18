@@ -19,7 +19,25 @@ data:extend({
 			entity_type_filters = {"pipe"},
 		},
 		alt_select = {
+			border_color = {229, 80, 192},
+			cursor_box_type = "not-allowed",
+			mode = {"any-entity"},
+			entity_type_filters = {"pipe"},
+		},
+		reverse_select = {
 			border_color = {255, 210, 73},
+			cursor_box_type = "entity",
+			mode = {"any-entity"},
+			entity_type_filters = {"pipe"},
+		},
+		alt_reverse_select = {
+			border_color = {255, 210, 192},
+			cursor_box_type = "entity",
+			mode = {"any-entity"},
+			entity_type_filters = {"pipe"},
+		},
+		super_forced_select = {
+			border_color = {255, 0, 0},
 			cursor_box_type = "entity",
 			mode = {"any-entity"},
 			entity_type_filters = {"pipe"},

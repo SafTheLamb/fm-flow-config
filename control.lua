@@ -5,6 +5,8 @@ local pipeinfo = require("flowlib.pipeinfo")
 local stateutil = require("flowlib.stateutil")
 local flowutil = require("flowlib.flowutil")
 
+local math2d = require("__core__.lualib.math2d")
+
 -- GUI --------------------------------------------------------------------------------------------
 
 local gui = {}
@@ -352,21 +354,36 @@ script.on_event(defines.events.on_entity_settings_pasted, on_entity_settings_pas
 
 local function on_player_selected_area(event)
 	-- TODO: Prioritize only connecting with other pipes selected within the region over other pipes (this lets you easily single out a row or section of pipes from connecting with their neighbors)
+	-- Make this a SHIFT setting
 	-- NOTE: Don't ignore non-pipe entity connections: these should remain in consideration.
 	if event.item ~= "fc-flow-key-tool" then return end
 	local player = game.players[event.player_index]
-	local is_locking = (event.name == defines.events.on_player_selected_area)
-	if is_locking then
+	local is_locking = (event.name == defines.events.on_player_selected_area or event.name == defines.events.on_player_alt_selected_area)
+	local is_restricted = (event.name == defines.events.on_player_alt_selected_area or event.name == defines.events.on_player_alt_reverse_selected_area or event.name == defines.events.on_player_super_forced_selected_area)
+	local area = event.area
+	-- Extend the area to include the center point of neighboring pipes
+	if is_restricted then
+		area.left_top = math2d.position.subtract(area.left_top, {x=0.5, y=0.5})
+		area.right_bottom = math2d.position.add(area.right_bottom, {x=0.5, y=0.5})
+	end
+
+	if event.name == defines.events.on_player_super_forced_selected_area then
 		for _,entity in pairs(event.entities) do
 			if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
-				flowutil.try_lock_pipe(player, entity)
+				flowutil.force_lock_pipe(player, entity, area)
+			end
+		end
+	elseif is_locking then
+		for _,entity in pairs(event.entities) do
+			if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
+				flowutil.try_lock_pipe(player, entity, is_restricted and event.area or nil)
 			end
 		end
 	else
 		for _,entity in pairs(event.entities) do
 			if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
 				-- check fluid compatibility so we're not causing half-blocked half-open connections
-				flowutil.try_unlock_pipe(player, entity, true)
+				flowutil.try_unlock_pipe(player, entity, is_restricted and event.area or nil)
 			end
 		end
 	end
@@ -374,5 +391,8 @@ end
 
 script.on_event(defines.events.on_player_selected_area, on_player_selected_area)
 script.on_event(defines.events.on_player_alt_selected_area, on_player_selected_area)
+script.on_event(defines.events.on_player_reverse_selected_area, on_player_selected_area)
+script.on_event(defines.events.on_player_alt_reverse_selected_area, on_player_selected_area)
+script.on_event(defines.events.on_player_super_forced_selected_area, on_player_selected_area)
 
 ---------------------------------------------------------------------------------------------------
