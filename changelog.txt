@@ -1,7 +1,13 @@
 ---------------------------------------------------------------------------------------------------
-Version: 2.1.8
+Version: 3.0.0
 Date: ????
-  Changes:
+  Major Features:
+    - The Flow selection tool now has distinct functionality for each selection mode
+    - Normal selection (left click) closes pipes without severing connections
+    - Reverse selection (right click) opens pipes
+    - NEW: Alt selection (shift left click) severs connections with pipes outside the selection area
+    - NEW: Alt reverse selection (shift right click) restores connections with pipes outside the selection area
+    - NEW: Super force selection (ctrl shift click) servers connections between pipes inside the selection area
 ---------------------------------------------------------------------------------------------------
 Version: 2.1.7
 Date: 2026-07-28
