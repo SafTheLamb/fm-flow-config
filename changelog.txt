@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.0.0
-Date: ????
+Date: 2026-09-19
   Major Features:
     - The Flow selection tool now has distinct functionality for each selection mode
     - Normal selection (left click) closes pipes within the selected area without severing connections
