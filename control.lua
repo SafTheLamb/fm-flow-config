@@ -369,7 +369,7 @@ local function on_player_selected_area(event)
 	end
 
 	-- Restrict selected area to selected pipes
-	if #event.entities > 0 and not (is_locking and not is_restricted) then
+	if #event.entities > 0 then
 		---@type math2d_position_union
 		local min_coord = nil
 		---@type math2d_position_union
