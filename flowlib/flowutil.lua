@@ -85,28 +85,32 @@ function flowutil.toggle_direction(player, pipe, dir)
 	return nil
 end
 
-function flowutil.try_lock_pipe(player, pipe, area)
+function flowutil.try_lock_pipe(player, pipe, area, is_restricted)
 	local states = stateutil.get_direction_states(pipe)
 	if not area and not stateutil.can_lock(states) then return nil end
 
 	local do_replace = false
-	for dir,_ in pairs(pipeinfo.directions) do
-		if stateutil.is_restricted(pipe, dir, area) then
-			if states.directions[dir] then
+	if is_restricted then
+		assert(area)
+		for dir,_ in pairs(pipeinfo.directions) do
+			if states.directions[dir] and stateutil.is_restricted(pipe, dir, area) then
 				states.directions[dir] = nil
 				do_replace = true
 			end
-		elseif states[dir] == "open" then
-			states.directions[dir] = nil
-			do_replace = true
 		end
-	end
-
-	-- If using a restricted area is too ambitious, unlock previously open connections within the bounds
-	if area and table_size(states.directions) < 2 then
+		-- If using a restricted area is too ambitious, unlock previously open connections within the bounds
+		if table_size(states.directions) < 2 then
+			for dir,_ in pairs(pipeinfo.directions) do
+				if states[dir] == "open" and not stateutil.is_restricted(pipe, dir, area) then
+					states.directions[dir] = true
+				end
+			end
+		end
+	else
 		for dir,_ in pairs(pipeinfo.directions) do
-			if states[dir] == "open" and not stateutil.is_restricted(pipe, dir, area) then
-				states.directions[dir] = true
+			if states[dir] == "open" and not (area and stateutil.is_restricted(pipe, dir, area)) then
+				states.directions[dir] = nil
+				do_replace = true
 			end
 		end
 	end
@@ -117,23 +121,34 @@ function flowutil.try_lock_pipe(player, pipe, area)
 	return nil
 end
 
-function flowutil.try_unlock_pipe(player, pipe, area)
+function flowutil.try_unlock_pipe(player, pipe, area, is_restricted)
 	local states = stateutil.get_direction_states(pipe)
 	if not stateutil.can_unlock(states) then return nil end
 
 	local do_replace = false
-	if area then
-		for dir,_ in pairs(pipeinfo.directions) do
-			if stateutil.is_restricted(pipe, dir, area) and states[dir] ~= "block" then
+	if is_restricted then
+		for dir,offset in pairs(pipeinfo.directions) do
+			if states[dir] ~= "block" and stateutil.is_restricted(pipe, dir, area) then
 				if not states.directions[dir] then
 					states.directions[dir] = true
 					do_replace = true
+				end
+				-- Also unlock the opposing pipe if they're compatible
+				local searchpos = math2d.position.add(pipe.position, offset)
+				local opposite = pipeinfo.opposite[dir]
+				local others = pipe.surface.find_entities_filtered{position=searchpos, type="pipe"}
+				for _,other in pairs(others) do
+					local other_states = stateutil.get_direction_states(other)
+					if stateutil.is_closed(other, opposite) and stateutil.are_fluids_compatible(pipe, other, 1) then
+						other_states.directions[opposite] = true
+						flowutil.replace_pipe(player, other, other_states.directions)
+					end
 				end
 			end
 		end
 	else
 		for dir,_ in pairs(pipeinfo.directions) do
-			if states[dir] == "close" then
+			if states[dir] == "close" and not (area and stateutil.is_restricted(pipe, dir, area)) then
 				states.directions[dir] = true
 				do_replace = true
 			end

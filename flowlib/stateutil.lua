@@ -198,7 +198,7 @@ function stateutil.is_blocked(pipe, dir, check_closed)
 end
 
 function stateutil.is_restricted(pipe, dir, area)
-	if not area then return false end
+	assert(area)
 
 	local dirpos = pipeinfo.directions[dir]
 	local searchpos = math2d.position.add(pipe.position, dirpos)

@@ -376,14 +376,14 @@ local function on_player_selected_area(event)
 	elseif is_locking then
 		for _,entity in pairs(event.entities) do
 			if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
-				flowutil.try_lock_pipe(player, entity, is_restricted and event.area or nil)
+				flowutil.try_lock_pipe(player, entity, event.area, is_restricted)
 			end
 		end
 	else
 		for _,entity in pairs(event.entities) do
 			if stateutil.is_pipe(entity) and not stateutil.is_denied(entity) then
 				-- check fluid compatibility so we're not causing half-blocked half-open connections
-				flowutil.try_unlock_pipe(player, entity, is_restricted and event.area or nil)
+				flowutil.try_unlock_pipe(player, entity, event.area, is_restricted)
 			end
 		end
 	end
