@@ -361,8 +361,53 @@ local function on_player_selected_area(event)
 	local is_locking = (event.name == defines.events.on_player_selected_area or event.name == defines.events.on_player_alt_selected_area)
 	local is_restricted = (event.name == defines.events.on_player_alt_selected_area or event.name == defines.events.on_player_alt_reverse_selected_area or event.name == defines.events.on_player_super_forced_selected_area)
 	local area = event.area
-	-- Extend the area to include the center point of neighboring pipes
+
+	-- Extend the area to include the center point of boundary pipes
 	if is_restricted then
+		area.left_top = math2d.position.subtract(area.left_top, {x=0.5, y=0.5})
+		area.right_bottom = math2d.position.add(area.right_bottom, {x=0.5, y=0.5})
+	end
+
+	-- Restrict selected area to selected pipes
+	if #event.entities > 0 and not (is_locking and not is_restricted) then
+		---@type math2d_position_union
+		local min_coord = nil
+		---@type math2d_position_union
+		local max_coord = nil
+		local first_found = false
+		for _,entity in pairs(event.entities) do
+			if stateutil.is_pipe(entity) then
+				if first_found then
+					if entity.position.x < min_coord.x then
+						min_coord.x = entity.position.x
+					elseif entity.position.x > max_coord.x then
+						max_coord.x = entity.position.x
+					end
+					if entity.position.y < min_coord.y then
+						min_coord.y = entity.position.y
+					elseif entity.position.y > max_coord.y then
+						max_coord.y = entity.position.y
+					end
+				else
+					min_coord = entity.position
+					max_coord = entity.position
+					first_found = true
+				end
+			end
+		end
+		if min_coord.x > area.left_top.x then
+			area.left_top.x = min_coord.x
+		end
+		if max_coord.x < area.right_bottom.x then
+			area.right_bottom.x = max_coord.x
+		end
+		if min_coord.y > area.left_top.y then
+			area.left_top.y = min_coord.y
+		end
+		if max_coord.y < area.right_bottom.y then
+			area.right_bottom.y = max_coord.y
+		end
+		-- Make sure center points are included
 		area.left_top = math2d.position.subtract(area.left_top, {x=0.5, y=0.5})
 		area.right_bottom = math2d.position.add(area.right_bottom, {x=0.5, y=0.5})
 	end
