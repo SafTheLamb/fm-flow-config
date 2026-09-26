@@ -56,6 +56,69 @@ pipeinfo.junctions = {
 	},
 }
 
+pipeinfo.blueprint = {
+	nothingburger = {
+		pictures = {
+			north = "straight_vertical_single",
+			east = "straight_vertical_single",
+			south = "straight_vertical_single",
+			west = "straight_vertical_single"
+		},
+		bitmasks = {0, 0, 0, 0},
+		pipe_connections = {}
+	},
+	ending = {
+		pictures = {
+			north = "ending_down",
+			east = "ending_left",
+			south = "ending_up",
+			west = "ending_right"
+		},
+		bitmasks = {4, 8, 1, 2},
+		pipe_connections = {3}
+	},
+	straight = {
+		pictures = {
+			north = "straight_vertical",
+			east = "straight_horizontal",
+			south = "straight_vertical",
+			west = "straight_horizontal"
+		},
+		bitmasks = {5, 10, 5, 10},
+		pipe_connections = {1, 3}
+	},
+	corner = {
+		pictures = {
+			north = "corner_down_right",
+			east = "corner_down_left",
+			south = "corner_up_left",
+			west = "corner_up_right"
+		},
+		bitmasks = {6, 12, 9, 3},
+		pipe_connections = {2, 3}
+	},
+	junction = {
+		pictures = {
+			north = "t_down",
+			east = "t_left",
+			south = "t_up",
+			west = "t_right"
+		},
+		bitmasks = {14, 13, 11, 7},
+		pipe_connections = {2, 3, 4}
+	},
+	cross = {
+		pictures = {
+			north = "cross",
+			east = "cross",
+			south = "cross",
+			west = "cross"
+		},
+		bitmasks = {15, 15, 15, 15},
+		pipe_connections = {1, 2, 3, 4}
+	}
+}
+
 pipeinfo.prefix_denylist = {
 	"factory-",
 	"underwater-pipe-placer",
