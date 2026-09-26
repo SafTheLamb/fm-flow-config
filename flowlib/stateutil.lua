@@ -46,12 +46,23 @@ function stateutil.get_pipe_data(pipename)
 	return nil
 end
 
+function stateutil.get_tank_data(pipename)
+	if storage.tanks[pipename] ~= nil then
+		return storage.tanks[pipename]
+	end
+	return nil
+end
+
 function stateutil.is_pipe(entity)
 	return entity and entity.type and (entity.type == "pipe" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe"))
 end
 
 function stateutil.is_pipe_to_ground(entity)
 		return entity and (entity.type == "pipe-to-ground" or (entity.type == "entity-ghost" and entity.ghost_type == "pipe-to-ground"))
+end
+
+function stateutil.is_tank(entity)
+	return entity and entity.type and (entity.type == "storage-tank" or (entity.type == "entity-ghost" and entity.ghost_type == "storage-tank"))
 end
 
 function stateutil.are_fluids_compatible(pipe, other, other_index)

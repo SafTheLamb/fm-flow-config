@@ -22,6 +22,14 @@ function flowutil.construct_pipename(basename, juncname)
 	end
 end
 
+function flowutil.construct_tankname(basename, tankname)
+	if tankname then
+		return basename.."-fct-"..tankname
+	else
+		return nil
+	end
+end
+
 function flowutil.replace_pipe(player, pipe, directions)
 	local force = player and player.force or pipe.force
 	if pipe.type == "entity-ghost" then

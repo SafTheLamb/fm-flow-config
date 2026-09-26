@@ -21,62 +21,54 @@ pipeinfo.opposite = {
 pipeinfo.junctions = {
 	-- straight ---------------------------------
 	ns = {
-		directions = {["north"]=true, ["south"]=true, [defines.direction.north]=true, [defines.direction.south]=true}
+		directions = {["north"]=true, ["south"]=true, [defines.direction.north]=true, [defines.direction.south]=true},
+		tank = {name="straight", direction=defines.direction.north}
 	},
 	ew = {
-		directions = {["east"]=true, ["west"]=true, [defines.direction.east]=true, [defines.direction.west]=true}
+		directions = {["east"]=true, ["west"]=true, [defines.direction.east]=true, [defines.direction.west]=true},
+		tank = {name="straight", direction=defines.direction.east}
 	},
 	
 	-- elbow ------------------------------------
 	ne = {
-		directions = {["north"]=true, ["east"]=true, [defines.direction.north]=true, [defines.direction.east]=true}
+		directions = {["north"]=true, ["east"]=true, [defines.direction.north]=true, [defines.direction.east]=true},
+		tank = {name="corner", direction=defines.direction.north}
 	},
 	es = {
-		directions = {["east"]=true, ["south"]=true, [defines.direction.east]=true, [defines.direction.south]=true}
+		directions = {["east"]=true, ["south"]=true, [defines.direction.east]=true, [defines.direction.south]=true},
+		tank = {name="corner", direction=defines.direction.east}
 	},
 	sw = {
-		directions = {["south"]=true, ["west"]=true, [defines.direction.south]=true, [defines.direction.west]=true}
+		directions = {["south"]=true, ["west"]=true, [defines.direction.south]=true, [defines.direction.west]=true},
+		tank = {name="corner", direction=defines.direction.south}
 	},
 	nw = {
-		directions = {["north"]=true, ["west"]=true, [defines.direction.north]=true, [defines.direction.west]=true}
+		directions = {["north"]=true, ["west"]=true, [defines.direction.north]=true, [defines.direction.west]=true},
+		tank = {name="corner", direction=defines.direction.west}
 	},
 
 	-- T-junction -------------------------------
 	nes = {
-		directions = {["north"]=true, ["east"]=true, ["south"]=true, [defines.direction.north]=true, [defines.direction.east]=true, [defines.direction.south]=true}
+		directions = {["north"]=true, ["east"]=true, ["south"]=true, [defines.direction.north]=true, [defines.direction.east]=true, [defines.direction.south]=true},
+		tank = {name="junction", direction=defines.direction.north}
 	},
 	esw = {
-		directions = {["east"]=true, ["south"]=true, ["west"]=true, [defines.direction.east]=true, [defines.direction.south]=true, [defines.direction.west]=true}
+		directions = {["east"]=true, ["south"]=true, ["west"]=true, [defines.direction.east]=true, [defines.direction.south]=true, [defines.direction.west]=true},
+		tank = {name="junction", direction=defines.direction.east}
 	},
 	nsw = {
-		directions = {["north"]=true, ["south"]=true, ["west"]=true, [defines.direction.north]=true, [defines.direction.south]=true, [defines.direction.west]=true}
+		directions = {["north"]=true, ["south"]=true, ["west"]=true, [defines.direction.north]=true, [defines.direction.south]=true, [defines.direction.west]=true},
+		tank = {name="junction", direction=defines.direction.south}
 	},
 	new = {
-		directions = {["north"]=true, ["east"]=true, ["west"]=true, [defines.direction.north]=true, [defines.direction.east]=true, [defines.direction.west]=true}
+		directions = {["north"]=true, ["east"]=true, ["west"]=true, [defines.direction.north]=true, [defines.direction.east]=true, [defines.direction.west]=true},
+		tank = {name="junction", direction=defines.direction.west}
 	},
 }
 
-pipeinfo.blueprint = {
-	nothingburger = {
-		pictures = {
-			north = "straight_vertical_single",
-			east = "straight_vertical_single",
-			south = "straight_vertical_single",
-			west = "straight_vertical_single"
-		},
-		bitmasks = {0, 0, 0, 0},
-		pipe_connections = {}
-	},
-	ending = {
-		pictures = {
-			north = "ending_down",
-			east = "ending_left",
-			south = "ending_up",
-			west = "ending_right"
-		},
-		bitmasks = {4, 8, 1, 2},
-		pipe_connections = {3}
-	},
+-- Based on code by protocol_1903 from Parallel Piping
+-- licensed under the Sunset Protocol License, a copy can be found in credits/SUNSET_LICENSE
+pipeinfo.tanks = {
 	straight = {
 		pictures = {
 			north = "straight_vertical",
@@ -85,37 +77,45 @@ pipeinfo.blueprint = {
 			west = "straight_horizontal"
 		},
 		bitmasks = {5, 10, 5, 10},
-		pipe_connections = {1, 3}
+		pipe_connections = {1, 3},
+		juncname = {
+			[defines.direction.north] = "ns",
+			[defines.direction.east] = "ew",
+			[defines.direction.south] = "ns",
+			[defines.direction.west] = "ew"
+		}
 	},
 	corner = {
 		pictures = {
-			north = "corner_down_right",
-			east = "corner_down_left",
-			south = "corner_up_left",
-			west = "corner_up_right"
+			north = "corner_up_right",
+			east = "corner_down_right",
+			south = "corner_down_left",
+			west = "corner_up_left"
 		},
-		bitmasks = {6, 12, 9, 3},
-		pipe_connections = {2, 3}
+		bitmasks = {9, 3, 6, 12},
+		pipe_connections = {1, 2},
+		juncname = {
+			[defines.direction.north] = "ne",
+			[defines.direction.east] = "es",
+			[defines.direction.south] = "sw",
+			[defines.direction.west] = "nw"
+		}
 	},
 	junction = {
 		pictures = {
-			north = "t_down",
-			east = "t_left",
-			south = "t_up",
-			west = "t_right"
+			north = "t_right",
+			east = "t_down",
+			south = "t_left",
+			west = "t_up"
 		},
-		bitmasks = {14, 13, 11, 7},
-		pipe_connections = {2, 3, 4}
-	},
-	cross = {
-		pictures = {
-			north = "cross",
-			east = "cross",
-			south = "cross",
-			west = "cross"
-		},
-		bitmasks = {15, 15, 15, 15},
-		pipe_connections = {1, 2, 3, 4}
+		bitmasks = {11, 7, 14, 13},
+		pipe_connections = {1, 2, 3},
+		juncname = {
+			[defines.direction.north] = "nes",
+			[defines.direction.east] = "esw",
+			[defines.direction.south] = "nsw",
+			[defines.direction.west] = "new"
+		}
 	}
 }
 

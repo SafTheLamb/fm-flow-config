@@ -1,7 +1,15 @@
 ---------------------------------------------------------------------------------------------------
-Version: 3.0.2
-Date: ????
-  Changes:
+Version: 3.1.0
+Date: 2026-09-26
+  Major Features:
+    - Configured pipes in blueprints CAN NOW BE ROTATED AND FLIPPED
+    - YESSSSS FINALLYYYYYY
+    - :tada:
+    - Credit to protocol_1903 for implementing this in Parallel Piping, which I copied and modified code from
+    - Code from Parallel Piping is under the Sunset Protocol license, found in credits/SUNSET_LICENSE
+    - Credit to S6X for giving me the same idea a year ago and me forgetting
+    - Pipes in the world still can't be flipped/rotated, soz
+    - But you can copy AND THEN rotate/flip :D
 ---------------------------------------------------------------------------------------------------
 Version: 3.0.1
 Date: 2026-09-19

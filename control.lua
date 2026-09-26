@@ -218,6 +218,7 @@ end
 local function create_pipe_map()
 	log("Searching prototype list for flow config pipes")
 	storage.pipes = {}
+	storage.tanks = {}
 	storage.mods = {}
 	storage.mods.tomwub = script.active_mods["the-one-mod-with-underground-bits"]
 	storage.mods.npt = script.active_mods["no-pipe-touching"]
@@ -238,6 +239,26 @@ local function create_pipe_map()
 			storage.pipes[prototype.name] = {basename=base, juncname=junc}
 			if storage.mods.tomwub then
 				storage.pipes[prototype.name].tomwub = util.string_starts_with(base, "tomwub-")
+			end
+		end
+	end
+	for _,prototype in pairs(prototypes.get_entity_filtered({{filter="type", type="storage-tank"}})) do
+		if prototype.type == "storage-tank" then
+			local split = util.split(prototype.name, "-")
+			local base = ""
+			local tank = nil
+			for i,s in pairs(split) do
+				if i == #split and tank == "fct" then
+					tank = s
+				elseif i == #split - 1 and s == "fct" then
+					tank = "fct"
+				else
+					if base == "" then base = s else base = base..'-'..s end
+				end
+			end
+			storage.tanks[prototype.name] = {basename=base, tankname=tank}
+			if storage.mods.tomwub then
+				storage.tanks[prototype.name].tomwub = util.string_starts_with(base, "tomwub-")
 			end
 		end
 	end
@@ -441,3 +462,80 @@ script.on_event(defines.events.on_player_alt_reverse_selected_area, on_player_se
 script.on_event(defines.events.on_player_super_forced_selected_area, on_player_selected_area)
 
 ---------------------------------------------------------------------------------------------------
+
+---comment
+---@param event EventData.on_player_setup_blueprint
+local function on_player_setup_blueprint(event)
+	-- Based on code by protocol_1903 from Parallel Piping
+	-- licensed under the Sunset Protocol License, a copy can be found in credits/SUNSET_LICENSE
+	local player = game.get_player(event.player_index)
+	if not player then return end
+	local blueprint = player.blueprint_to_setup
+	if not blueprint or not blueprint.valid_for_read then
+		blueprint = player.cursor_stack
+	end
+	local entities = blueprint and blueprint.get_blueprint_entities() or nil
+	if not entities then return end
+
+	local changed = false
+	for _,entity in pairs(entities) do
+		local pipedata = stateutil.get_pipe_data(entity.name)
+		if pipedata and pipedata.juncname then
+			changed = true
+			local tankinfo = pipeinfo.junctions[pipedata.juncname].tank
+			local variation = flowutil.construct_tankname(pipedata.basename, tankinfo.name)
+			entity.name = variation
+			entity.direction = tankinfo.direction
+		end
+	end
+	if changed then
+		blueprint.set_blueprint_entities(entities)
+	end
+end
+
+script.on_event(defines.events.on_player_setup_blueprint, on_player_setup_blueprint)
+
+---------------------------------------------------------------------------------------------------
+
+--- @param event EventData.on_built_entity|EventData.on_robot_built_entity|EventData.on_space_platform_built_entity|EventData.script_raised_built|EventData.script_raised_revive|EventData.on_cancelled_deconstruction
+local function on_built_entity(event)
+	-- Based on code by protocol_1903 from Parallel Piping
+	-- licensed under the Sunset Protocol License, a copy can be found in credits/SUNSET_LICENSE
+	local player = event.player_index and game.get_player(event.player_index)
+	local this = event.entity
+	local stack = player and player.undo_redo_stack
+	local blueprint = stack and stack.get_undo_item_count() > 0 and #stack.get_undo_item(1) ~= 1
+
+	if this.type == "entity-ghost" and this.ghost_type == "storage-tank" or this.type == "storage-tank" then
+		---@diagnostic disable-next-line: undefined-field
+		local tankdata = stateutil.get_tank_data(this.name)
+		if tankdata then
+			local tankdata = pipeinfo.tanks[tankdata.tankname]
+			if not tankdata then return end
+			local juncname = tankdata.juncname[this.direction]
+			local new_name = flowutil.construct_pipename(tankdata.basename, juncname)
+			this.surface.create_entity{
+				name = this.name == "entity-ghost" and "entity-ghost" or new_name,
+				ghost_name = this.name == "entity-ghost" and new_name or nil,
+				position = this.position,
+				quality = this.quality,
+				force = this.force,
+				player = event.player_index,
+				undo_index = player and 1 or nil,
+				create_build_effect_smoke = false,
+				raise_built = true
+			}
+			this.destroy()
+			if stack and not blueprint then
+				stack.remove_undo_action(1, 1)
+			end
+		end
+	end
+end
+
+local event_filter = {{filter = "type", type = "pipe"}, {filter = "ghost_type", type = "pipe"}, {filter = "type", type = "storage-tank"}, {filter = "ghost_type", type = "storage-tank"}}
+script.on_event(defines.events.on_built_entity, on_built_entity)
+script.on_event(defines.events.on_robot_built_entity, on_built_entity, event_filter)
+script.on_event(defines.events.on_space_platform_built_entity, on_built_entity, event_filter)
+script.on_event(defines.events.script_raised_built, on_built_entity, event_filter)
+script.on_event(defines.events.script_raised_revive, on_built_entity, event_filter)

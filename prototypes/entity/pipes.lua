@@ -48,16 +48,19 @@ for _,entity in pairs(data.raw.pipe) do
 		end
 		table.insert(all_pipe_names, entity.name)
 
-		for tankname,metadata in pairs(pipeinfo.blueprint_tanks) do
+		-- Based on code by protocol_1903 from Parallel Piping
+		-- licensed under the Sunset Protocol License, a copy can be found in credits/SUNSET_LICENSE
+		for tankname,metadata in pairs(pipeinfo.tanks) do
 			local tank = util.copy(entity) ---@cast tank data.StorageTankPrototype
 			tank.type = "storage-tank"
-			tank.name = entity.name.."-fcbp-"..tankname
+			tank.name = entity.name.."-fct-"..tankname
 			if not tank.localised_name then
 				tank.localised_name = {"entity-name."..entity.name}
 			end
 			if not tank.localised_description then
 				tank.localised_description = {"entity-description."..entity.name}
 			end
+
 			tank.build_sound = nil
 			tank.created_smoke = nil
 			tank.window_bounding_box = {{0,0},{0,0}}
@@ -67,6 +70,7 @@ for _,entity in pairs(data.raw.pipe) do
 			tank.flow_length_in_ticks = 1
 			tank.hidden = true
 			tank.hidden_in_factoriopedia = true
+			tank.placeable_by = {item="pipe", count=1}
 			if tank.circuit_connector then
 				tank.circuit_connector = {}
 				for i,bitmask in pairs(metadata.bitmasks) do
