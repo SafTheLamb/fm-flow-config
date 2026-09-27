@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.1.2
-Date: ????
+Date: 2026-09-27
   Bugfixes:
     - Tentatively fix mismatched bounding box load error with internal prototypes
     - Harden code a bit against pipes not having any fluid segments(?)
