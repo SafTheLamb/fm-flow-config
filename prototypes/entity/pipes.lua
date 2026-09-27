@@ -68,6 +68,7 @@ for _,entity in pairs(data.raw.pipe) do
 			tank.pictures = {picture={}}
 			tank.fluid_box.pipe_connections = {}
 			tank.flow_length_in_ticks = 1
+			tank.next_upgrade = nil
 			tank.hidden = true
 			tank.hidden_in_factoriopedia = true
 			tank.placeable_by = {item="pipe", count=1}
