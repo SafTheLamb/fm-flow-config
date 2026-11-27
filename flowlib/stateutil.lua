@@ -68,7 +68,6 @@ end
 function stateutil.are_fluids_compatible(pipe, other, other_index)
 	if not pipe.has_fluid_segment(1) then return true end
 	if not other.has_fluid_segment(1) then
-		game.print("WOULD HAVE CRASHED")
 		return true
 	end
 	local fluid_a = pipe.get_fluid_segment_fluid(1)
