@@ -517,7 +517,7 @@ script.on_event(defines.events.on_player_setup_blueprint, on_player_setup_bluepr
 ---------------------------------------------------------------------------------------------------
 
 local function should_handle_built_entity_undo_stack(event)
-	local player = game.get_player(event.player_index)
+	local player = event.player_index and game.get_player(event.player_index)
 	if player then
 		local cached = storage.player_built_cache[event.player_index]
 		if cached and cached.tick == event.tick then
@@ -530,8 +530,8 @@ local function should_handle_built_entity_undo_stack(event)
 			storage.player_built_cache[event.player_index] = {tick=event.tick, value=true}
 			return true
 		end
+		storage.player_built_cache[event.player_index] = {tick=event.tick, value=false}
 	end
-	storage.player_built_cache[event.player_index] = {tick=event.tick, value=false}
 	return false
 end
 

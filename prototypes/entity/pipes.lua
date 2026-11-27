@@ -84,11 +84,18 @@ for _,entity in pairs(data.raw.pipe) do
 			for direction,index in pairs(metadata.pictures) do
 				if entity.pictures and entity.pictures[index] then
 					if entity.pictures[index][1] then
-						tank.pictures.picture[direction] = entity.pictures[index][1]
+						if table_size(entity.pictures[index][1]) > 0 then
+							tank.pictures.picture[direction] = entity.pictures[index][1]
+						end
 					else
-						tank.pictures.picture[direction] = entity.pictures[index]
+						if table_size(entity.pictures[index]) > 0 then
+							tank.pictures.picture[direction] = entity.pictures[index]
+						end
 					end
 				end
+			end
+			if table_size(tank.pictures.picture) == 0 then
+				tank.pictures = nil
 			end
 			table.insert(tank_entities, tank)
 		end
