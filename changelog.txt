@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 3.1.8
-Date: ????
+Date: 2026-11-27
   Bugfixes:
     - Fix crash when placing configured pipe with robots
     - Fix crash when configuring pipes next to other machines with a fluid segment
